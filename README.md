@@ -10,7 +10,7 @@ et on conclut notre *requête* par "s'il vous plaît".
 
 ## Prépare tes munitions
 
-![I need ammo](https://raw.githubusercontent.com/bhubr/http-exercises/img/i-need-ammo.jpg)
+![I need ammo](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/i-need-ammo.jpg)
 
 On va s'exercer à faire des requêtes sur un mini-serveur écrit avec Node.js. Tu vas avoir besoin de plusieurs outils :
 * Node.js. Si tu ne l'as pas, tu peux l'installer sous Ubuntu / Debian en suivant [ces instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
@@ -53,9 +53,10 @@ Cette fonction reçoit deux paramètres `req` et `res`, qui sont tous les deux d
 * `res` permet de préparer la réponse à envoyer au client.
 
 Ici, on a d'abord :
-* indiqué un code de retour "OK" : c'est la signification du paramètre `200` passé à `res.writeHead()`.
-* indiqué une en-tête spécifiant le *type de contenu* (`Content-Type`) qu'on envoie au client. Ici, du texte simple (*plain text*).
-* envoyé `Hello World` dans le corps de la réponse.
+* appelé `res.writeHead()` pour :
+    * préparer le *code de statut* : un nombre qui permet d'indiquer au client si le traitement de la requête s'est bien déroulé. Chaque nombre a une traduction en anglais, plus explicite pour un humain. `200` est traduit par `OK` et signifie que tout s'est bien passé.
+    * indiquer une en-tête spécifiant le *type de contenu* (`Content-Type`) qu'on envoie au client. Ici, du texte simple (*plain text*). Remarque que l'en-tête est écrite sous forme de clé-valeur dans un objet : on peut avoir plusieurs en-têtes de réponse (*response headers*).
+* appelé `res.end()` pour écrire `Hello World` dans le corps de la réponse, et finaliser celle-ci.
 
 Maintenant, teste ça ! Lance `npm run server` dans un terminal si ce n'est déjà fait, et dans un autre, lance :
 
@@ -80,9 +81,9 @@ Juste dessous, tu dois avoir un curseur... Tape `GET /` puis valide **deux fois*
 
 Explications :
 * En saisissant `GET /`, tu indiques au serveur que tu veux obtenir la ressource sur sa racine (chemin `/`).
-* Valider deux fois est nécessaire, car le serveur comprend que la requête est terminée quand il voit une ligne vide.
+* Valider deux fois est nécessaire, car le serveur comprend que la requête est terminée quand il voit une ligne vide - du moins *pour les requêtes GET*.
 * Le serveur répond en envoyant une chaîne de texte assez longue, qu'on peut décomposer en trois parties :
-    * `HTTP/1.1 200 OK` indique la version du protocole HTTP (1.1 ici), et le code de statut (`200` dont la traduction en texte est `OK`).
+    * `HTTP/1.1 200 OK` indique la version du protocole HTTP (1.1 ici), et le code de statut (`200 OK`).
     * Les trois lignes suivantes sont les en-têtes de réponse (*response headers*), à chaque fois sous forme d'une *clé*, suivie de `:` puis d'une *valeur* :
         * `Content-Type` vaut ce qu'on a indiqué dans le code du serveur
         * `Date` est indiqué par défaut par le serveur créé via `http.createServer()`, et contient la date et heure précises de la requête.
