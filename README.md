@@ -667,4 +667,4 @@ que les deux opérations de lecture (read all, read one).
 
 C'est pour "coller" à cette... heu... convention, qu'on passe l'id, ou slug, ou autre, dans le chemin de l'URL, et pas via la query string. Et puis ça fait des URL plus "propres", non ?
 
-Du coup, dans notre exepmle, on récupère le slug via `req.params.movieSlug`, et non pas via `req.query.movieSlug` si on avait passé le slug dans la query string.
+Du coup, dans notre exemple, on récupère le slug via `req.params.movieSlug`, et non pas via `req.query.movieSlug` (qu'on aurait utilisé si on avait passé le slug dans la query string).
