@@ -710,3 +710,90 @@ En résumé : le middleware `checkKeyMiddleware` vérifie la présence d'une cl�
 Si par contre une clé valide est passée (valide au sens trouvée dans le tableau `knownKeys`), on passe au callback de la route, en appelant `next()`.
 
 **Du coup**, à toi de jouer : utilise soit telnet, soit Firefox, pour interroger le serveur avec une URL un paramètre `key` correct dans la query string.
+
+### Etape 10 : code d'erreur `403 Forbidden`
+
+`git checkout etape10-unauthorized`
+
+On arrive à un autre code d'erreur couramment utilisé par les sites et applications web : le `403 Forbidden`. Forbidden, Unauthorized... cela ne se ressemble-t-il pas un peu ?
+
+À première vue, oui... Mais du point de vue du protocole HTTP, c'est différent. Imagine un site ou application un tant soit peu complexe. Par exemple un CMS comme la plate-forme de blog WordPress (écrite en PHP, mais ça ne change rien). WordPress, par exemple, gère plusieurs "rôles" d'utilisateurs : le plus élevé étant le rôle "Administrateur", qui permet de tout gérer sur le site : contenu, installation d'extensions, modification des options, changement du "template" d'affichage ; le moins élevé étant le rôle "Abonné", où une personne dispose d'un profil personnel sur le site, mais ne peut pas faire grand chose (par exemple, elle ne peut pas publier d'articles).
+
+Les deux personnes se connectent à la partie "administrative" de WordPress via le même formulaire de login. Une fois qu'elles saisissent ce formulaire avec des identifiants valides, WordPress les reconnaît, et les *autorise* à accéder au site. Par contre, si un abonné essaie d'accéder à une page réservée aux administrateurs, il reçoit une erreur `403 Forbidden` : il est bien reconnu en tant qu'utilisateur, mais WordPress sait que ses "droits d'accès" sont insuffisants pour accéder à cette page.
+
+On va continuer sur l'exemple de l'API fictive "movie", en y ajoutant un mécanisme semblable. On pourrait par exemple :
+* Autoriser tous les accès GET aux utilisateurs reconnus, quel que soit leur "rôle".
+* N'autoriser les accès POST, PUT, DELETE, qu'aux utilisateurs ayant le rôle "admin".
+
+On va se simplifier la tâche, et ne considérer que deux rôles : "regular" et "admin". Voici le code (parties changées uniquement, sans les commentaires) :
+
+```javascript
+// Tableau d'utilisateurs, chacun ayant un "rôle" : soit "admin", soit "regular"
+const users = [
+  { id: 1, role: 'admin' },
+  { id: 2, role: 'regular' },
+  { id: 3, role: 'regular' }
+];
+
+// Vérification de la clé
+const checkKeyMiddleware = (req, res, next) => {
+  // Cette partie est inchangée
+  if(! req.query.key) {
+    return res.status(401).send('You must provide a valid key in the query string');
+  }
+  const foundKey = knownKeys.find(k => k.key === req.query.key);
+  if(! foundKey) {
+    return res.status(401).send('The key you provided is not valid');
+  }
+  console.log('Authentified user with id:', foundKey.userId);
+
+  // ATTENTION, modif par rapport à l'exemple précédent : on stocke l'utilisateur,
+  // reconnu via la "key" associée à un "userId", directement dans l'objet req.
+  // Ceci afin de pouvoir le transmettre au middleware suivant
+  req.user = users.find(u => u.id === foundKey.userId);
+  next();
+}
+
+// Vérification du rôle de l'utilisateur
+const checkAdminMiddleware = (req, res, next) => {
+  // On n'est pas obligé de donner trop de détails sur pourquoi on renvoie "Forbidden".
+  if(req.user.role !== 'admin') {
+    return res.status(403).send('Forbidden');
+  }
+  // Si l'utilisateur est bien un admin, on peut passer au middleware suivant
+  next();
+}
+
+// Utilise le middleware checkKeyMiddleware pour protéger TOUTES les routes
+app.use(checkKeyMiddleware);
+
+// Ne vérifie le rôle admin que pour CETTE route
+app.post('/api/movies', checkAdminMiddleware, (req, res) => {
+  // On renvoie une réponse "bidon" juste pour dire que ça a "marché"
+  res.send({ id: 6, slug: 'new-movie', title: 'New movie', content: 'Your request succeeded!' });
+})
+```
+
+Dans le code, plusieurs changements :
+* On a créé un tableau `users` contenant 3 utilisateurs : seul celui avec l'id 1 a le rôle "admin".
+* Quand on vérifie la clé dans `checkKeyMiddleware`, on va chercher dans `users` l'utilisateur qui a l'id indiqué par la propriété `userId` de l'objet `foundKey`.
+* On stocke cet utilisateur dans `req.user` avant de passer au middleware suivant.
+* Le middleware suivant, `checkAdminMiddleware`, ne sera appelé que sur la route `app.post('/api/movies', ...)`. Remarque qu'on l'indique comme 2ème paramètre,
+et que le callback qui traite la requête se retrouve en 3ème.
+* Ce callback de la route "création de movie" est d'ailleurs fictif... il ne crée rien du tout ici :). Dans la vraie vie, on créerait un objet dans la BDD.
+* Si on résume quels middlewares seront exécutés pour chaque route, on a :
+    * `checkKeyMiddleware` puis `checkAdminMiddleware` pour la route de création
+    * `checkKeyMiddleware` uniquement pour les deux routes de lecture
+
+Si on résume, au regard de cet exemple, la différence entre `401 Unauthorized` et `403 Forbidden` :
+* Un client HTTP appelant l'API sans fournir de clé, ou en fournissant une clé invalide, reçoit une `401 Unauthorized` : il ne peut être reconnu comme un utilisateur enregistré.
+* Un client appelant l'API avec une clé correspondant un utilisateur "regular" peut accéder aux routes de lecture, mais pas à celle d'écriture : il reçoit une `403 Forbidden` s'il le tente
+* Un client appelant l'API avec une clé d'utilisateur "admin" peut accéder à tout.
+
+Fais quelques essais en essayant différentes ces combinaisons de clés et d'URL, avec telnet (tu ne pourras pas le faire avec le navigateur, tu pourrais le faire avec curl ou Postman cependant) :
+* `GET /api/movies`
+* `GET /api/movies?key=kn6Gemyfp871S1FT2rHG4RjTFnHfTanT`
+* Une requête POST cette fois, mais avec la même clé et la même URL : `POST /api/movies?key=kn6Gemyfp871S1FT2rHG4RjTFnHfTanT`
+* Une requête POST, avec une clé "admin" : `POST /api/movies?key=aH5QlmpU9PE02UHPw6C9sk8r01WYtkQB`
+
+Petite remarque : on valide les requêtes POST aussi par un "double entrée", *du moins pour l'instant*. Plus tard, on fournira un "corps de requête" (*request body*).
