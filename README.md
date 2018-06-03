@@ -558,3 +558,31 @@ en fonction de ses besoins.
 * `ETag` est une sorte d'empreinte digitale de la ressource. Si elle ne change pas d'une requête à l'autre, cela permet au navigateur de mettre en cache la ressource, pour éviter une requête complète au serveur pour la recharger. Plus d'infos [ici](https://fr.wikipedia.org/wiki/Balise-entit%C3%A9_ETag_HTTP) et d'autres plus complètes (et complexes !) [ici](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching?hl=fr).
 
 Tu peux aussi constater qu'Express, sans qu'on lui ait rien demandé, a aussi calculé la longueur du contenu et l'a indiquée dans `Content-Length`. Gentil Express !
+
+### Etape 8 : code d'erreur `404 Not Found`
+
+`git checkout etape08a-express-not-found`
+
+On repart d'un exemple plus simple avec Express.
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.set({
+    'Content-Type': 'text/html',
+  })
+  .status(200)
+  .send(`<h1>Hello World</h1><ul>
+    <li><a href="/">Home (this page)</a></li>
+    <li><a href="/page-not-found">Show me a 404!</a></li>
+  `);
+});
+
+app.listen(8080);
+```
+
+Teste le avec le navigateur (suis le lien "Show me a 404"), mais surtout, avec telnet (`GET /une-url-au-pif`), pour voir de plus près ce qui se passe : tu reçois cette fois `404 Not Found` comme code de statut. Normal, une seule route est câblée sur l'app Express, celle correspondant au chemin racine `/`.
+
+Ici, c'est Express lui-même qui a généré la réponse, du fait qu'aucune route ne matche l'URL requise.
