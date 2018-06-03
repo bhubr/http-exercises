@@ -202,3 +202,39 @@ http.createServer(function (req, res) {
 Rafraîchis encore la page... Le XML n'est plus interprété en tant que tel, et donc le code est affiché tel quel, sans formatage.
 
 ![XML document as plain text](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/xml-document-content-type-text.png)
+
+### Etape 4 : contenu JSON
+
+Cette étape est à nouveau subdivisée en deux "sous-étapes". **Promis**, c'est la dernière du genre, cette fois avec du contenu JSON.
+
+`git checkout etape04a-content-type-json`
+
+Voici le code du serveur à cette étape :
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  res.end(`{"date":{"year":2018,"month":"June","day":"3rd"},"mood":"WTF is this HTTP thing anyway?"}`);
+}).listen(8080);
+```
+
+On a cette fois spécifié `application/json` comme valeur de l'en-tête `Content-Type`, avec du JSON comme corps de la réponse.
+
+Cette fois, **utilise spécifiquement Firefox** pour voir la page : il a en effet a la bonté d'interpréter le JSON, comme on le ferait en JavaScript avec `JSON.parse()`.
+
+La même chose en changeant le `Content-Type` (`git checkout etape04a-content-type-text`)
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end(`{"date":{"year":2018,"month":"June","day":"3rd"},"mood":"WTF is this HTTP thing anyway?"}`);
+}).listen(8080);
+```
+
+Rafraîchis encore la page... Le XML n'est plus interprété en tant que tel, et donc le code est affiché tel quel, sans formatage.
+
+![XML document as plain text](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/xml-document-content-type-text.png)
