@@ -8,7 +8,7 @@ http.createServer((req, res) => {
   //   quand l'opération de lecture est terminée, avec deux issues possibles:
   //   - erreur : dans ce cas, err contient un objet Error et buffer est vide
   //   - succès : err est vide (null) et buffer contient les données
-  fs.readFile('public/05/document.txt', (err, buffer) => {
+  fs.readFile('img/i-need-ammo.jpg', (err, buffer) => {
     // On a mis tout le code de préparation et d'envoi de la réponse DANS le callback :
     // en d'autres termes, on a attendu de récupérer le résultat de la lecture
     // du fichier, avant d'envoyer la réponse.
@@ -17,7 +17,7 @@ http.createServer((req, res) => {
     // mauvais chemin de fichier, donc l'erreur à renvoyer devrait être "404 Not Found"
     if(err) {
       res.writeHead(404, {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'image/jpeg'
       });
       // On utilise return pour sortir et être sûr qu'on exécutera pas le code après le if
       return res.end(`File not found`);
@@ -26,7 +26,7 @@ http.createServer((req, res) => {
     // Pas d'erreur : on envoie le fichier
     res.writeHead(200, {
       'Content-Type': 'text/plain',
-      'Content-Disposition': 'attachment; filename="my-document.txt"'
+      'Content-Disposition': 'attachment; filename="i-need-some-fucking-ammo.jpg"'
     });
     // Le 2ème paramètre, buffer, ne contient pas une String, mais des octets.
     // Tout simplement parce que le fichier pourrait contenir autre chose que du texte (image, etc.)

@@ -151,6 +151,8 @@ Rafraîchis encore la page, et... Surprise ! Le texte n'est plus "formaté" comm
 C'est le changement du header `Content-Type` qui a causé cela. Les headers de réponse donnent des informations au client, sur comment interpréter le corps de la réponse.
 Le `Content-Type` en particulier indique quel type de contenu le serveur envoie au client. Ici, on a bien envoyé une chaîne contenant du HTML, mais on a explicitement dit au client que cette chaîne est du texte simple (*plain text*).
 
+Ce qu'on met dans le `Content-Type` est appelé un [type MIME](https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types), chaque type de document ayant le sien.
+
 ### Etape 3 : contenu XML
 
 Cette étape est à nouveau subdivisée en deux "sous-étapes". **Rien de très nouveau**, mais on va revoir la même chose avec du contenu XML.
@@ -290,3 +292,17 @@ Note qu'on peut très bien indiquer ici un nom différent de celui du fichier qu
 grosso modo un tableau d'octets (je t'ai mis le lien vers un article, mais tu peux t'en passer pour l'instant). Si on sait que ce sont des données de type texte (HTML, JSON, code source, etc.), et qu'on veut les afficher dans la console, il faut alors les convertir en String via `toString()` : `console.log(buffer.toString())`.
 
 Avec Firefox ou Chrome, rafraîchis la page... Tu devrais voir s'ouvrir la boîte de dialogue pour choisir que faire du fichier à télécharger (à moins que ton browser ne soit paramétré avec un emplacement prédéfini comme `~/Downloads` ou `~/Téléchargements`).
+
+Essaie à nouveau une requête avec `telnet localhost 8080` puis `GET /`. Evidemment avec Telnet, on ne te propose pas de télécharger le fichier pour le sauvegarder quelque part. **La capacité à interpréter un header et à modifier son comportement en fonction**, est dépendante du client HTTP qu'on utilise.
+
+Telnet ne fait qu'afficher la réponse du serveur, "brute de décoffrage", et n'interprète aucunement les headers.
+
+**Maintenant, la même chose avec une image** : `git checkout etape05b-content-disposition-image`
+
+Dans le code serveur (que je t'épargne ici), on a juste :
+* changé le nom du fichier à lire (`img/i-need-ammo.jpg`)
+* changé le header `Content-Type` en `image/jpeg` ([type MIME](https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types) d'une image JPEG).
+* changé le nom de fichier dans le header `Content-Disposition` en `i-need-some-fucking-ammo.jpg` (une fois encore, en illstrant le fait que rien ne nous contraint à
+indiquer la même chose que le nom du fichier d'origine).
+
+Tiens, pour rigoler un peu, fais encore une requête avec Telnet... Cela devrait te montrer, d'une manière très visuelle, qu'il y a des données convertibles en chaînes de caractères, et d'autres... pas !
