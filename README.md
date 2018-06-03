@@ -14,6 +14,8 @@ et on conclut notre *requête* par "s'il vous plaît".
 
 On va s'exercer à faire des requêtes sur un mini-serveur écrit avec Node.js. Tu vas avoir besoin de plusieurs outils :
 * Node.js. Si tu ne l'as pas, tu peux l'installer sous Ubuntu / Debian en suivant [ces instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
+* nodemon - un package pour Node.js, permettant de "surveiller" le fichier répertoire contenant le code source du serveur, pour le redémarrer
+à chaque changement : `sudo npm install -g nodemon`
 * Mozilla Firefox - qui pour ces exercices, présente un avantage par rapport à Chrome, pour visualiser le résultat de certaines requêtes
 * curl, outil de requêtes spécifique au protocole HTTP, pour émettre des requêtes depuis le terminal. Installe-le avec `sudo apt-get install curl`
 * telnet, outil de requêtes, indépendant de tout protocole, pour voir de plus près les coulisses... Installe-le avec `sudo apt-get install telnet`
@@ -31,7 +33,7 @@ Dans l'autre terminal, tu pourras lancer des requêtes via `curl` et `telnet`, e
 
 Prêt ? C'est parti !
 
-### Requête, réponse, en-têtes
+### Etape 1 : texte simple
 
 `git checkout etape01`
 
@@ -58,7 +60,7 @@ Ici, on a d'abord :
     * indiquer une en-tête spécifiant le *type de contenu* (`Content-Type`) qu'on envoie au client. Ici, du texte simple (*plain text*). Remarque que l'en-tête est écrite sous forme de clé-valeur dans un objet : on peut avoir plusieurs en-têtes de réponse (*response headers*).
 * appelé `res.end()` pour écrire `Hello World` dans le corps de la réponse, et finaliser celle-ci.
 
-Maintenant, teste ça ! Lance `npm run server` dans un terminal si ce n'est déjà fait, et dans un autre, lance :
+Maintenant, teste ça ! Lance `npm run server` ou `nodemon` dans un terminal si ce n'est déjà fait, et dans un autre, lance :
 
     telnet localhost 8080
 
@@ -88,4 +90,18 @@ Explications :
         * `Content-Type` vaut ce qu'on a indiqué dans le code du serveur
         * `Date` est indiqué par défaut par le serveur créé via `http.createServer()`, et contient la date et heure précises de la requête.
         * `Connection: close` indique que le serveur doit fermer la connection après avoir répondu. C'est aussi une valeur par défaut mise par le serveur.
-    * Le *corps* de la réponse proprement dit, constitué uniquement de `Hello World`. Le reste, `Connection closed by foreign host.`, nous est indiqué par telnet lui-même, pour indiquer que c'est le serveur (foreign host = hôte distant) qui a fermé la connection.
+    * Le *corps* de la réponse proprement dit, constitué uniquement de `Hello World`. Le reste, `Connection closed by foreign host.`, nous est indiqué par telnet lui-même, pour indiquer que c'est le serveur (foreign host = hôte distant) qui a fermé la connection. Comme  `Hello World` ne contient aucun retour à la ligne, cette chaîne vient se coller juste derrière à l'affichage.
+
+**Maintenant**, va sur [http://localhost:8080](http://localhost:8080) avec Firefox ou Chrome, et ouvre les outils de développement (F12, ou Ctrl+Shift+I sur PC, Cmd+Option+I sur Mac). Dans l'un comme dans l'autre, tu as un onglet "Network" ou "Réseau", qui affiche une liste des requêtes envoyées pour la page en cours.
+Clique sur la ligne correspondant à la 1ère requête (voir captures).
+
+Avec Chrome, tu peux voir les en-têtes de réponse "brutes" comme dans Telnet, en cliquant "view source" à côté de "Response Headers".
+
+![Google Chrome](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/google-chrome.png)
+
+Avec Firefox, on peut faire la même chose en cliquant "Raw headers" sur la ligne où se trouve le "Status code".
+
+![Mozilla Firefox](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/mozilla-firefox.png)
+
+**Conclusion** de cette étape : le serveur envoie autre chose que simplement "Hello World". Le code de statut et les en-têtes donnent des informations supplémentaires au client.
+Mais pour quoi faire ? Cela va devenir plus clair avec l'exemple suivant...
