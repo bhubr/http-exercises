@@ -224,7 +224,7 @@ On a cette fois spécifié `application/json` comme valeur de l'en-tête `Conten
 
 Cette fois, **utilise spécifiquement Firefox** pour voir la page : il a en effet a la bonté d'interpréter le JSON, comme on le ferait en JavaScript avec `JSON.parse()`.
 
-La même chose en changeant le `Content-Type` (`git checkout etape04a-content-type-text`)
+La même chose en changeant le `Content-Type` (`git checkout etape04b-content-type-text`)
 
 ```javascript
 const http = require('http');
@@ -235,6 +235,4 @@ http.createServer(function (req, res) {
 }).listen(8080);
 ```
 
-Rafraîchis encore la page... Le XML n'est plus interprété en tant que tel, et donc le code est affiché tel quel, sans formatage.
-
-![XML document as plain text](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/xml-document-content-type-text.png)
+À nouveau, le JSON est affiché tel quel, sans être formaté.
