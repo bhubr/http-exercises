@@ -236,3 +236,57 @@ http.createServer(function (req, res) {
 ```
 
 À nouveau, le JSON est affiché tel quel, sans être formaté.
+
+### Etape 5 : téléchargement de fichier
+
+À nouveau, deux sous-étapes pour illustrer le propos. La première :
+
+`git checkout etape05a-content-disposition-text`.
+
+**Attention, ça va se corser !** Mais ne te mets pas en PLS pour autant :).
+
+On va voir ici plusieurs choses :
+* la lecture d'un fichier avec le module `fs` de Node.js
+* un autre header, `Content-Disposition`.
+
+Voici le code serveur *sans les commentaires*, mais je t'invite à consulter ceux-si dans `server.js`.
+
+```javascript
+const http = require('http');
+const fs = require('fs');
+
+http.createServer((req, res) => {
+  fs.readFile('public/05/document.txt', (err, buffer) => {
+    if(err) {
+      res.writeHead(404, {
+        'Content-Type': 'text/plain'
+      });
+      return res.end(`File not found`);
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/plain',
+      'Content-Disposition': 'attachment; filename="my-document.txt"'
+    });
+    console.log(buffer.toString());
+    res.end(buffer);
+  });
+}).listen(8080);
+```
+
+Je te retrace quand même les grandes étapes de ce qui se passe dans le callback `(req, res) => { ... }` qui
+traite la requête :
+1. Lecture du fichier en utilisant [fs.readFile](https://nodejs.org/api/fs.html#fs_fs_readfile_path_options_callback)
+2. Exécution du callback `(err, buffer) => { ... }` à la fin de celle-ci
+
+    * en cas d'erreur (`if(err) { ... }`), envoi d'une réponse avec le code `404 Not Found` et un message d'erreur.
+    * en cas de succès, envoi d'une réponse avec :
+
+        * le code `200 OK`,
+        * le header `Content-Type` pour indiquer du contenu texte,
+        * le header `Content-Disposition` pour indiquer que c'est un fichier téléchargeable (`attachment`) avec un certain nom (`my-document.txt`).
+Note qu'on peut très bien indiquer ici un nom différent de celui du fichier qu'on a lu !!
+        * le corps de la réponse. `fs.readFile` peut lire *tout* type de fichier : "texte" ou "binaire". Cette dernière catégorie inclut les fichiers images, audio, vidéo, exécutables, etc., dont les données ne sont *pas convertibles en String*. Le callback de `fs.readFile` récupère donc un [Buffer](http://bit.do/BuffersInNodeJS),
+grosso modo un tableau d'octets (je t'ai mis le lien vers un article, mais tu peux t'en passer pour l'instant). Si on sait que ce sont des données de type texte (HTML, JSON, code source, etc.), et qu'on veut les afficher dans la console, il faut alors les convertir en String via `toString()` : `console.log(buffer.toString())`.
+
+Avec Firefox ou Chrome, rafraîchis la page... Tu devrais voir s'ouvrir la boîte de dialogue pour choisir que faire du fichier à télécharger (à moins que ton browser ne soit paramétré avec un emplacement prédéfini comme `~/Downloads` ou `~/Téléchargements`).
