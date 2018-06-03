@@ -17,17 +17,19 @@ app.get('/', (req, res) => {
   .status(200)
   .send(`<h1>Movie API</h1>
     <ul>
-      <li><a href="/the-last-jedi">The Last Jedi</a></li>
-      <li><a href="/the-grand-budapest-hotel">The Grand Budapest Hotel</a></li>
-      <li><a href="/the-matrix">The Matrix</a></li>
-      <li><a href="/wall-e">Wall-E</a></li>
-      <li><a href="/the-last-of-the-mohicans">The Last of the Mohicans</a></li>
-      <li><a href="/some-random-movie">Some Random Movie (404)</a></li>
+      <li><a href="/api/movies/the-last-jedi">The Last Jedi</a></li>
+      <li><a href="/api/movies/the-grand-budapest-hotel">The Grand Budapest Hotel</a></li>
+      <li><a href="/api/movies/the-matrix">The Matrix</a></li>
+      <li><a href="/api/movies/wall-e">Wall-E</a></li>
+      <li><a href="/api/movies/the-last-of-the-mohicans">The Last of the Mohicans</a></li>
+      <li><a href="/api/movies/some-random-movie">Some Random Movie (404)</a></li>
     </ul>
   `);
 });
 
-app.get('/:movieSlug', (req, res) => {
+app.get('/api/movies', (req, res) => res.json(movies));
+
+app.get('/api/movies/:movieSlug', (req, res) => {
   // Un petit find() pour chercher un film dont le "slug" correspond à celui passé
   // dans l'URL
   const movie = movies.find(m => m.slug === req.params.movieSlug);

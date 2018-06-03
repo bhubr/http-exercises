@@ -630,3 +630,41 @@ Si ce que tu mets comme chemin relatif correspond au slug d'un des `movies`, alo
 
 Sinon, on renvoie une erreur 404. Bien que simple, et n'utilisant pas une vraie base de données, cet exemple ressemble à ce qu'on trouverait
 dans une vraie appli pour signifier au client qu'une ressource n'a pas été trouvée.
+
+On génère nous-mêmes l'erreur 404 si un objet "matchant" le slug passant dans l'URL n'est pas trouvé.
+
+Mais au fait... Tu te demandes peut-être : pourquoi n'utilise-t-on pas la query string, pour communiquer au serveur le slug du "movie" qu'on souhaite
+récupérer ? Quelque chose du genre `/api/movies?movieSlug=wall-e`...?
+
+![Much to learn you still have, young padawan](https://memegenerator.net/img/instances/59950310/much-to-learn-you-still-have-young-padawan.jpg)
+
+Ah, jeune padawan, encore beaucoup à apprendre tu as ! Mais à vrai dire, c'est une question légitime ! La réponse à ta question tient en la structure
+habituelle des dites API REST. Une API REST est une API qui expose des données à des clients, qui l'interrogent via HTTP. Elle est le plus souvent
+liée à une base de données, et fait un lien entre les méthodes du protocole HTTP, et les différentes opérations possibles sur une base, résumées
+par l'acronyme CRUD: Create, Read, Update, Delete.
+
+Le plus souvent, on a cette structure d'URL. Gardons l'exemple des movies :
+* `POST /movies`
+    * Créer un objet `movie`
+    * Requête SQL : `INSERT INTO movie (slug, title, content) VALUES(...)`
+* `GET /movies` :
+    * Lire tous les objets `movie`
+    * Requête SQL : `SELECT * FROM movie`
+* `GET /movies/:id` :
+    * Lire un objet `movie`, identifié via son id
+    * Requête SQL : `SELECT * FROM movie WHERE id=${id}`
+* `UPDATE /movies/:id`
+    * Mettre à jour un objet `movie`, identifié via son id
+    * Requête SQL : `UPDATE movie SET slug='...', title='...', content='...' WHERE id=${id}`
+* `DELETE /movies/:id`
+    * Supprimer un objet `movie` identifié via son id
+    * Requête SQL : `DELETE FROM movie WHERE id=${id}`
+
+Bien que CRUD comporte 4 opérations, on a le plus souvent deux routes distinctes suivant qu'on souhaite obtenir *tous* les objets d'un certain type (read all), ou *un seul* objet (read one).
+
+L'exemple ci-dessus montre une variante, où on utilise le slug (supposé unique) plutôt que l'id pour retrouver un movie. Il est simplifié dans le sens où on n'a implémenté
+que les deux opérations de lecture (read all, read one).
+
+C'est pour "coller" à cette... heu... convention, qu'on passe l'id, ou slug, ou autre, dans le chemin de l'URL, et pas via la query string. Et puis ça fait des URL plus "propres", non ?
+
+Du coup, dans notre exepmle, on récupère le slug via `req.params.movieSlug`, et non pas via `req.query.movieSlug` si on avait passé le slug dans la query string.
