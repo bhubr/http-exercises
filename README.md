@@ -455,16 +455,27 @@ http.createServer(function (req, res) {
 
 Tu peux essayer d'interroger le serveur depuis ton navigateur, en utilisant les URLs suivantes :
 * [http://localhost:8080](http://localhost:8080)
-* [http://localhost:8080?firstName=Joe&lastName=Dalton](http://localhost:8080?firstName=Joe&lastName=Dalton)
+* [http://localhost:8080?firstName=Joe&lastName=Dalton&email=joe%40daltonfamily.org](http://localhost:8080?firstName=Joe&lastName=Dalton&email=joe%40daltonfamily.org)
 * [http://localhost:8080?school=Wild&city=Toulouse&language=JavaScript](http://localhost:8080?school=Wild&city=Toulouse&language=JavaScript)
 
 Essaie la même chose avec telnet :
 * `GET /`
-* `GET /?firstName=Joe&lastName=Dalton`
+* `GET /?firstName=Joe&lastName=Dalton&email=joe%40daltonfamily.org`
 * `GET /?school=Wild&city=Toulouse&language=JavaScript`
 
-Bon, c'est pas mal, mais ça reste basique : on a juste séparé la query string du reste de l'URL. Maintenant, ce serait plus pratique de pouvoir
-récupérer chaque paramètre individuellement, non ?
+#### Encodage des caractères spéciaux et accentués
+
+Note le `%40` dans la seconde URL. C'est le caractère `@`, converti ou *encodé* dans un format compatible avec les URLs. En effet, la plupart des caractères spéciaux, ainsi que les caractères accentués, ne peuvent pas être passés sans encodage dans la query string.
+
+Il existe de nombreux outils en ligne comme [celui-ci](https://meyerweb.com/eric/tools/dencoder/), permettant d'encoder/décoder des chaînes au format des URLs (au passage c'est le site d'Eric Meyer, gourou du CSS et auteur de la [bible ultime sur le sujet](https://meyerweb.com/eric/books/css-tdg/), en 1088 pages !).
+
+En JavaScript, on dispose des fonctions [encodeURIComponent](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/encodeURIComponent) et [decodeURIComponent](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/decodeURIComponent) pour effectuer cet encodage/décodage.
+
+**Attention**, chaque "composant" de l'URL doit être encodé individuellement. Il ne faut pas chercher à encoder `firstName=Joe&lastName=Dalton&email=joe@daltonfamily.org` d'un coup, car alors les esperluettes (`&`) seraient encodées en `%26`, et ne feraient plus office de séparateurs entre les paires de clés-valeurs de la query string !
+
+#### Conclusion de cette sous-étape : peut mieux faire !
+
+Bon, côté serveur, notre code reste basique : dans le traitement de la requête par le serveur, on a juste séparé la query string du reste de l'URL. Maintenant, ce serait plus pratique de pouvoir récupérer chaque paramètre individuellement, non ?
 
 Sous-étape suivante : `git checkout etape07b-querystring-vanilla-urlparse`
 
@@ -624,7 +635,9 @@ const movies = [
 ]
 
 // Voir server.js
-app.get('/', (req, res) => { // ... });
+app.get('/', (req, res) => {
+  // ...
+});
 
 app.get('/:movieSlug', (req, res) => {
   // find() pour chercher un film dont le "slug" correspond à
@@ -815,3 +828,72 @@ Fais quelques essais en essayant différentes ces combinaisons de clés et d'URL
 * Une requête POST, avec une clé "admin" : `POST /api/movies?key=aH5QlmpU9PE02UHPw6C9sk8r01WYtkQB`
 
 Petite remarque : on valide les requêtes POST aussi par un "double entrée", *du moins pour l'instant*. Plus tard, on fournira un "corps de requête" (*request body*).
+
+### Etape 11 : envoi de formulaire par méthode GET
+
+Nous arrivons à un sujet ô combien important dans les sites et applications web : l'envoi de données de formulaires.
+
+On repart cette fois d'un nouvel exemple : `git checkout etape11a-formulaire-get`
+
+Voilà le code du serveur :
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  // Un formulaire à afficher. On n'indique pas d'attribut method dans la balise <form>,
+  // c'est donc GET qui est utilisé par défaut
+  let responseText = `<form>
+      <h1>Contact</h1>
+      <input name="name" type="text" placeholder="Your name" />
+      <input name="email" type="email" placeholder="Your email" />
+      <input name="message" type="text" placeholder="Your (short) message" />
+      <input type="submit" value="Send" />
+    </form>`
+  // Quand le formulaire a été saisi, on récupère ses données via req.query
+  // Si on vient d'ouvrir la page, il n'y a pas de query, donc le tableau
+  // queryStringKeys est vide.
+  const queryStringKeys = Object.keys(req.query)
+  if(queryStringKeys.length > 0) {
+    // On réutilise le reduce sur les clés de la query string
+    // pour générer des list items:
+    const dataItems = queryStringKeys.reduce(
+        // deux paramètres: callback, puis valeur initiale de carry: ''
+        (carry, key) => carry + `<li>${key}: ${req.query[key]}</li>`, ''
+      )
+
+    // On ajoute le résultat au formulaire
+    responseText += `<div>
+      <h3>Submitted data:</h3>
+        <ul>
+          ${dataItems}
+        </ul>
+      </div>
+      <p><a href="/">Return to home (with empty form)</a>`;
+  }
+  res.send(responseText);
+});
+
+app.listen(8080);
+
+```
+
+On envoie au client un formulaire tout simple, contenant 3 champs et un bouton "Send". Ouvre la [http://localhost:8080](page d'accueil), remplis et soumets ce
+formulaire : une requête GET part vers la *même* URL.
+
+Pourquoi une requête GET ? Parce qu'on n'a pas spécifié une méthode différente via l'attribut `method`. Pourquoi vers la même URL ? Parce qu'on n'a pas spécifié non plus une URL vers laquelle soumettre, ce qu'on aurait pu faire via l'attribut `action` (exemple [ici](https://www.w3schools.com/tags/att_form_method.asp)).
+
+L'URL dans la barre d'adresse est modifiée et laisse apparaître... une query string collée à l'URL ! C'est en effet par la query string que les données d'un formulaire sont envoyées, quand on utilise la méthode GET.
+
+Le formulaire étant envoyé par le client en GET vers le chemin `/`, côté serveur, c'est la même route qui gère la création et l'envoi du formulaire, et son traitement.
+On ne traite le formulaire que si la query string existe - en d'autres termes, que le tableau de clés de la query string, récupéré via `Object.keys(req.query)`, est non-vide.
+
+Dans ce cas, on affiche les données qui ont été soumises, tout en affichant tout de même le formulaire.
+
+Essaie maintenant de soumettre ce formulaire, non pas via le navigateur, mais via telnet. Des exemples :
+* `GET /?name=Beno%C3%AEt&email=benoit%40dontyoudarespamme.net&message=Those+brackets+%5B%5D+have+been+URL-encoded`
+* `GET /?name=John&email=contact%40johnmayer.com&message=Listen+to+my+song+Gravity`
+Si tu veux faire tes propres requêtes (ce que je te conseille), reporte-toi à un outil d'encodage en ligne, ou utilise [encodeURIComponent](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/encodeURIComponent) dans la console de ton navigateur, pour l'encodage de chaînes comportant des caractères spéciaux:
+
+**La soumission de formulaires en GET**, telle que ci-dessus, est quelque peu tombée en désuétude. Les paramètres GET sont toujours largement utilisés (ex. des vidéos YouTube vu précédemment), mais on ne les communique généralement pas via des formulaires. Ou alors, pour des usages bien spécifiques, comme va le montrer l'exemple suivant.
