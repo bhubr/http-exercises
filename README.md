@@ -91,6 +91,7 @@ Explications :
         * `Date` est indiqué par défaut par le serveur créé via `http.createServer()`, et contient la date et heure précises de la requête.
         * `Connection: close` indique que le serveur doit fermer la connection après avoir répondu. C'est aussi une valeur par défaut mise par le serveur.
     * Le *corps* de la réponse proprement dit, constitué uniquement de `Hello World`. Le reste, `Connection closed by foreign host.`, nous est indiqué par telnet lui-même, pour indiquer que c'est le serveur (foreign host = hôte distant) qui a fermé la connection. Comme  `Hello World` ne contient aucun retour à la ligne, cette chaîne vient se coller juste derrière à l'affichage.
+    * **Remarque importante** : note la ligne vide entre les en-têtes de réponse et le corps : elle est importante, car elle permet au client de délimiter la fin de la partie "en-têtes" de la réponse, et le début de la partie "corps".
 
 **Maintenant**, va sur [http://localhost:8080](http://localhost:8080) avec Firefox ou Chrome, et ouvre les outils de développement (F12, ou Ctrl+Shift+I sur PC, Cmd+Option+I sur Mac). Dans l'un comme dans l'autre, tu as un onglet "Network" ou "Réseau", qui affiche une liste des requêtes envoyées pour la page en cours.
 Clique sur la ligne correspondant à la 1ère requête (voir captures).
@@ -306,3 +307,39 @@ Dans le code serveur (que je t'épargne ici), on a juste :
 indiquer la même chose que le nom du fichier d'origine).
 
 Tiens, pour rigoler un peu, fais encore une requête avec Telnet... Cela devrait te montrer, d'une manière très visuelle, qu'il y a des données convertibles en chaînes de caractères, et d'autres... pas !
+
+### Etape 6 : header `Content-Length`
+
+`git checkout etape06a-content-length`
+
+On va revenir à un code serveur plus simple, presque identique à celui de l'étape 1, à ceci près qu'on a ajouté le header `Content-Length`. Celui-ci indique la *longueur* en octets du corps de la réponse. En principe, le client peut s'en passer : si le serveur renvoie la réponse entière, d'un seul coup, et ferme la connexion, le client utilise comme *corps* tout ce qu'il a reçu après la ligne vide qui clôt les en-têtes de réponse.
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/plain',
+    'Content-Length': '500000'
+  });
+  res.end('Hello World');
+}).listen(8080);
+```
+
+Regarde ce qui se passe avec telnet... Visiblement, à part l'ajout du header `Content-Length` aux en-têtes de réponse, rien à signaler !
+
+Essaie maintenant avec Firefox **et** Chrome, car ils n'ont pas le même comportement !
+
+Firefox "mouline" dans le vide pendant un moment, mais finit par afficher "Hello World". En gros, le serveur lui a dit "je t'envoie 500.000 octets", mais lui en a envoyé guère plus de 10. Firefox attend, puis au bout d'un certain temps prédéfini - un "timeout" - il fait avec ce qu'il a reçu, et l'affiche.
+
+Chrome aussi "mouline" pendant un moment, puis nous informe d'un échec, d'une façon cinglante et cruellement barbare, nous faisant questionner jusqu'au sens de la vie :
+
+![Chrome Content-Length mismatch](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/chrome-content-length-mismatch.png)
+
+Eh oui, on ne badine pas impunément avec le `Content-Length`, en tout cas pas avec Chrome. Le code d'erreur `ERR_CONTENT_LENGTH_MISMATCH` qu'il affiche n'est pas un code d'erreur HTTP, mais un code interne à Chrome. Chrome a constaté un décalage (*mismatch*) entre la longueur du corps attendue, spécifiée par le serveur dans `Content-Length`, et la longueur du corps qu'il a effectivment reçu. Fatal.
+
+Là encore, on constate que chaque client a un comportement différent vis-à-vis des headers :
+* telnet n'interprète pas plus `Content-Length` que les autres headers
+* Firefox en tient compte mais ne génère pas d'erreur fatale en cas de décalage
+* Chrome te fait gentiment comprendre que t'es gentil, mais que si tu veux mettre un `Content-Length`, il faut lui mettre la bonne valeur.
+
