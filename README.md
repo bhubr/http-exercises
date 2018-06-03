@@ -586,3 +586,47 @@ app.listen(8080);
 Teste le avec le navigateur (suis le lien "Show me a 404"), mais surtout, avec telnet (`GET /une-url-au-pif`), pour voir de plus près ce qui se passe : tu reçois cette fois `404 Not Found` comme code de statut. Normal, une seule route est câblée sur l'app Express, celle correspondant au chemin racine `/`.
 
 Ici, c'est Express lui-même qui a généré la réponse, du fait qu'aucune route ne matche l'URL requise.
+
+`git checkout etape08b-not-found-api`
+
+Maintenant, on peut très bien avoir "câblé" une certaine route, mais devoir retourner une erreur 404 depuis le callback associé à cette route. Le code suivant est extrait de `server.js`, mais j'ai omis la "home page" qui ne fait que fournir des liens vers la "vraie" route qui nous intéresse, `app.get('/:movieSlug', (req, res) => { ... })`, ainsi que les commentaires.
+
+C'est une sorte de mini-API pour récupérer des appréciations (objectives) sur des films. On utilise un simple tableau comme pseudo-base de données.
+
+```javascript
+const express = require('express');
+const app = express();
+
+const movies = [
+  { id: 1, slug: 'the-last-jedi', title: 'The Last Jedi', content: 'Seriously... It really sucks!!!' },
+  { id: 2, slug: 'the-grand-budapest-hotel', title: 'The Grand Budapest Hotel', content: 'This, on the other hand, is good.' },
+  { id: 3, slug: 'the-matrix', title: 'The Matrix', content: 'A timeless classic.' },
+  { id: 4, slug: 'wall-e', title: 'Wall-E', content: 'Great one.' },
+  { id: 5, slug: 'the-last-of-the-mohicans', title: 'The Last of the Mohicans', content: "Call me an incult, I haven't seen this one." }
+]
+
+// Voir server.js
+app.get('/', (req, res) => { // ... });
+
+app.get('/:movieSlug', (req, res) => {
+  // find() pour chercher un film dont le "slug" correspond à
+  // celui passé dans l'URL
+  const movie = movies.find(m => m.slug === req.params.movieSlug);
+  // Si non trouvé : on génère soi-même une 404
+  if(! movie) {
+    return res.status(404).json({
+      error: `No movie found with slug '${req.params.movieSlug}'`
+    });
+  }
+  // Pas besoin de mettre .status(200) car 200 est le statut par défaut
+  res.json(movie);
+});
+
+app.listen(8080);
+```
+
+Essaie différentes URL: [http://localhost:8080/wall-e](Wall-E), [http://localhost:8080/the-last-jedi](The Last Jedi), etc.
+Si ce que tu mets comme chemin relatif correspond au slug d'un des `movies`, alors l'objet correspondant est retourné dans la réponse.
+
+Sinon, on renvoie une erreur 404. Bien que simple, et n'utilisant pas une vraie base de données, cet exemple ressemble à ce qu'on trouverait
+dans une vraie appli pour signifier au client qu'une ressource n'a pas été trouvée.
