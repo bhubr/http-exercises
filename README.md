@@ -200,3 +200,5 @@ http.createServer(function (req, res) {
 ```
 
 Rafraîchis encore la page... Le XML n'est plus interprété en tant que tel, et donc le code est affiché tel quel, sans formatage.
+
+![XML document as plain text](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/xml-document-content-type-text.png)

@@ -1,7 +1,7 @@
 const http = require('http');
 
 http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end(`<?xml version="1.0" encoding="UTF-8"?>
 <note>
   <to>Student</to>
