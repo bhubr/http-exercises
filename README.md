@@ -381,3 +381,69 @@ Au lieu de cela, on démarre l'exécution périodique d'une fonction via `setInt
 Après l'écriture de 100 lignes de 20 caractères, on stoppe l'exécution périodique de `writeResponseLine` en appelant `clearInterval`. On termine la réponse en utilisant `res.end('')`.
 
 Je t'invite à vérifier ce qui se passe dans telnet et l'un des navigateurs : on reçoit le contenu petit à petit. Comme la longueur du contenu reçu est égale à celle annoncée dans `Content-Length`, le chargement de la page s'arrête dès que le serveur termine l'écriture de sa réponse. C'est beau.
+
+### Etape 7 : la "query string"
+
+Je te vois prendre un air interrogatif, jeune padawan : "Boudu, quesséqu'c'tebêtelà ?". Mais en fait, tu *connais* la query string, tu l'as déjà vue à l'oeuvre, maintes et maintes fois !
+
+Regarde cette URL :
+[https://www.youtube.com/watch?v=dqUdI4AIDF0&list=PL314E1EA470B1A85C](https://www.youtube.com/watch?v=dqUdI4AIDF0&list=PL314E1EA470B1A85C).
+
+Elle peut être décomposée en plusieurs parties :
+
+* Le protocole `http` ou `https` suivi de `://`
+* Le nom d'hôte `www.youtube.com`
+* Le chemin relatif à la racine de l'hôte `/watch`
+* Un point d'interrogation `?`, qui sépare tout ce qu'il y a avant, de la query string
+* La query string `v=dqUdI4AIDF0&list=PL314E1EA470B1A85C`.
+
+Le terme "query string" pourrait être traduit par "chaîne de requête", "paramètres de requête", ou encore "paramètres d'URL" ou "paramètres GET".
+
+La query string de l'exemple contient deux paramètres, séparés par `&` (appelé *ampersand* en anglais, esperluette en français). Chaque paramètre est composé d'une clé et d'une valeur, séparés par un `=` :
+* Le paramètre `v` contient la valeur `dqUdI4AIDF0`, qui pour YouTube est l'identifiant de la vidéo à visionner.
+* Le paramètre `list` contient la valeur `PL314E1EA470B1A85C`, qui identifie une playlist dans laquelle cette vidéo a été intégrée.
+
+Dans l'exemple de YouTube, on pourrait enlever `&list=PL314E1EA470B1A85C` de l'URL, et on visionnerait alors la vidéo en dehors d'une playlist.
+
+Il n'y a *pas de convention particulière* sur les noms des clés, ni sur les valeurs : c'est l'équipe de développement de l'application serveur qui décide de quels paramètres utiliser ou non.
+
+Avec Node.js, dans le callback de traitement d'une requête, on accède à l'URL demandée via `req.url`, qui contient l'URL entière.
+Si on n'utilise pas un framework comme Express, on peut extraire la query string de l'URL comme le montre l'exemple suivant.
+
+`git checkout etape07a-querystring-vanilla-manual`
+
+Si tu t'interroges sur le sens de "vanilla", c'est un terme utilisé pour décrire quelque chose de "basique" ou sans fioritures. Ici le nom de ce tag Git indique que le serveur est écrit en Node.js "vanilla", sans l'aide d'une librairie ou framework comme Express.
+
+On utilise le même terme pour les applications front-end : on parle de "vanilla JavaScript" pour une appli qui utilise uniquement l'api DOM native des navigateurs (telle que le projet 2 à la Wild), par opposition aux applis qui utilisent des librairies et frameworks tels que React, Angular, etc.
+
+J'y ai adjoint le terme "manual" pour signifier qu'on analyse "manuellement" l'URL pour en extraire la query string.
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  const urlSegments = req.url.split('?');
+  const responseText = `URL:
+  * Full URL: ${req.url}
+  * Before query string separator (?): ${urlSegments[0]}
+  * Query string: ${ urlSegments.length > 1 ? urlSegments[1] : 'N/A' }
+  `
+  res.writeHead(200, {
+    'Content-Type': 'text/plain',
+  });
+  res.end(responseText);
+}).listen(8080);
+```
+
+Tu peux essayer d'interroger le serveur depuis ton navigateur, en utilisant les URLs suivantes :
+* [http://localhost:8080](http://localhost:8080)
+* [http://localhost:8080?firstName=Joe&lastName=Dalton](http://localhost:8080?firstName=Joe&lastName=Dalton)
+* [http://localhost:8080?school=Wild&city=Toulouse&language=JavaScript](http://localhost:8080?school=Wild&city=Toulouse&language=JavaScript)
+
+Essaie la même chose avec telnet :
+* `GET /`
+* `GET /?firstName=Joe&lastName=Dalton`
+* `GET /?school=Wild&city=Toulouse&language=JavaScript`
+
+Bon, c'est pas mal, mais ça reste basique : on a juste séparé la query string du reste de l'URL. Maintenant, ce serait plus pratique de pouvoir
+récupérer chaque paramètre individuellement, non ?
