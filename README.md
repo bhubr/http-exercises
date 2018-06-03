@@ -447,3 +447,62 @@ Essaie la même chose avec telnet :
 
 Bon, c'est pas mal, mais ça reste basique : on a juste séparé la query string du reste de l'URL. Maintenant, ce serait plus pratique de pouvoir
 récupérer chaque paramètre individuellement, non ?
+
+Sous-étape suivante : `git checkout etape07b-querystring-vanilla-urlparse`
+
+On reste dans du Node.js "vanilla". Tu vas être ravi d'apprendre que tu n'as pas besoin d'écrire tout le code pour extraire la query string de l'URL, ni pour extraire *chaque* paramètre de l'URL. Le fort bien nommé module `url` de Node.js, livré en standard, fournit une méthode `parse()` qui permet de *parser* (c'est du franglais comme on aime) une URL, c'est à dire de l'analyser pour en faire quelque chose d'exploitable.
+
+Elle prend au moins un paramètre : l'URL. Elle prend éventuellement un 2ème voire un 3ème paramètres (référence [ici](https://nodejs.org/docs/latest/api/url.html#url_url_parse_urlstring_parsequerystring_slashesdenotehost)). Le 2ème paramètre indique s'il faut parser la query string, et est `false` par défaut : on doit donc explicitement passer `true`.
+
+`url.parse()` renvoie un objet qui ressemble à ceci, si l'URL qu'on lui passe est la dernière des 3 URL d'exemples ci-dessus :
+
+    {
+      protocol: null,
+      slashes: null,
+      auth: null,
+      host: null,
+      port: null,
+      hostname: null,
+      hash: null,
+      search: '?school=Wild&city=Toulouse&language=JavaScript',
+      query: { school: 'Wild', city: 'Toulouse', language: 'JavaScript' },
+      pathname: '/',
+      path: '/?school=Wild&city=Toulouse&language=JavaScript',
+      href: '/?school=Wild&city=Toulouse&language=JavaScript'
+    }
+
+Ce qui nous intéresse ici c'est le `pathname` (`/` la racine du serveur), et la `query`, elle-même un objet, contenant les couples clé-valeur passés via la query string.
+
+Et voici le code serveur (comme d'hab, commentaires plus complets dans `server.js`) :
+
+```javascript
+const http = require('http');
+const url = require('url');
+
+http.createServer(function (req, res) {
+  // Analyse l'URL. 2ème paramètre = true --> parser la query string
+  const parsedUrl = url.parse(req.url, true);
+
+  // Affiche le résultat dans la console (check ton terminal !)
+  console.log(parsedUrl);
+
+  // Prépare un texte de base pour la réponse
+  const responseTextBase = `URL:
+  * Full URL: ${req.url}
+  * Query string parameters:\n`;
+
+  // Object.keys() pour récupérer les clés (ex: ['school', 'city', 'language'])
+  const queryStringKeys = Object.keys(parsedUrl.query);
+
+  // reduce pour ajouter  - clé: valeur  au texte de base, pour chaque paramètre
+  const responseText = queryStringKeys.reduce((carry, key) => {
+    return carry + `    - ${key}: ${parsedUrl.query[key]}\n`
+  }, responseTextBase);
+
+  res.writeHead(200, {
+    'Content-Type': 'text/plain',
+  });
+  res.end(responseText);
+}).listen(8080);
+
+```
