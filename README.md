@@ -668,3 +668,45 @@ que les deux opérations de lecture (read all, read one).
 C'est pour "coller" à cette... heu... convention, qu'on passe l'id, ou slug, ou autre, dans le chemin de l'URL, et pas via la query string. Et puis ça fait des URL plus "propres", non ?
 
 Du coup, dans notre exemple, on récupère le slug via `req.params.movieSlug`, et non pas via `req.query.movieSlug` (qu'on aurait utilisé si on avait passé le slug dans la query string).
+
+### Etape 9 : code d'erreur `401 Unauthorized`
+
+`git checkout etape09-unauthorized`
+
+On va repartir de l'exemple précédent, pour montrer un mécanisme *simple* de protection d'une API contre des accès non autorisés. Admettons qu'on ne veuille donner accès à l'API movies que pour des utilisateurs enregistés. Chaque utilisateur se voit fournir une "clé secrète" lors de son inscription.
+
+Ce mécanisme est proche de celui mis en place par Google Maps ([un exemple web](https://developers.google.com/maps/documentation/javascript/examples/map-simple?hl=fr#essayez-par-vous-mme)) pour authentifier les requêtes.
+
+Les modifications apportées par rapport à l'étape précédente : d'une part, on a supprimé la home page pour avoir moins de code ! À toi de construire tes URL pour interroger l'API. À côté, on a ajouté ce bloc de code :
+
+```javascript
+// Tableau de clés d'authentification
+const knownKeys = [
+  { userId: 1, key: 'aH5QlmpU9PE02UHPw6C9sk8r01WYtkQB' },
+  { userId: 2, key: 'kn6Gemyfp871S1FT2rHG4RjTFnHfTanT' },
+  { userId: 3, key: 'cfchxuv75lSD8RlShYit5DStLzLe5RaI' }
+];
+
+// Middleware qui vérifie la présence de la clé et sa validité
+const checkKeyMiddleware = (req, res, next) => {
+  if(! req.query.key) {
+    return res.status(401).send('You must provide a valid key in the query string');
+  }
+  const foundKey = knownKeys.find(k => k.key === req.query.key);
+  if(! foundKey) {
+    return res.status(401).send('The key you provided is not valid');
+  }
+  // Clé trouvée : continue l'exécution, next() passe au callback de la route
+  console.log('Authentified user with id:', foundKey.userId);
+  next();
+}
+
+// Utilise le middleware pour protéger TOUTES les routes
+app.use(checkKeyMiddleware);
+```
+
+En résumé : le middleware `checkKeyMiddleware` vérifie la présence d'une clé passée via la query string. Si aucune clé n'est passée, ou si la clé passée est invalide, on envoie une réponse au client, avec un code d'erreur. Ce code d'erreur est `401 Unauthorized` : on n'a pas pu reconnaître l'appelant (utilisateur) de l'API, et donc on lui interdit l'accès. `next()` n'est alors jamais appelée, et on n'arrivera pas jusqu'au callback de la route demandée.
+
+Si par contre une clé valide est passée (valide au sens trouvée dans le tableau `knownKeys`), on passe au callback de la route, en appelant `next()`.
+
+**Du coup**, à toi de jouer : utilise soit telnet, soit Firefox, pour interroger le serveur avec une URL un paramètre `key` correct dans la query string.

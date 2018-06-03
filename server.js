@@ -10,22 +10,34 @@ const movies = [
   { id: 5, slug: 'the-last-of-the-mohicans', title: 'The Last of the Mohicans', content: "Call me an incult, I haven't seen this one." }
 ]
 
-app.get('/', (req, res) => {
-  res.set({
-    'Content-Type': 'text/html',
-  })
-  .status(200)
-  .send(`<h1>Movie API</h1>
-    <ul>
-      <li><a href="/api/movies/the-last-jedi">The Last Jedi</a></li>
-      <li><a href="/api/movies/the-grand-budapest-hotel">The Grand Budapest Hotel</a></li>
-      <li><a href="/api/movies/the-matrix">The Matrix</a></li>
-      <li><a href="/api/movies/wall-e">Wall-E</a></li>
-      <li><a href="/api/movies/the-last-of-the-mohicans">The Last of the Mohicans</a></li>
-      <li><a href="/api/movies/some-random-movie">Some Random Movie (404)</a></li>
-    </ul>
-  `);
-});
+// On crée un tableau de clés d'authentification, chacune étant liée à un utilisateur
+// (bien qu'on n'utilise pas ce userId pour l'instant)
+const knownKeys = [
+  { userId: 1, key: 'aH5QlmpU9PE02UHPw6C9sk8r01WYtkQB' },
+  { userId: 2, key: 'kn6Gemyfp871S1FT2rHG4RjTFnHfTanT' },
+  { userId: 3, key: 'cfchxuv75lSD8RlShYit5DStLzLe5RaI' }
+];
+
+// Un middleware qui va vérifier la présence de la clé dans la query string,
+// et sa validité (la trouve-t-on dans le tableau knownKeys ?)
+const checkKeyMiddleware = (req, res, next) => {
+  // Erreur si aucune clé fournie
+  if(! req.query.key) {
+    return res.status(401).send('You must provide a valid key in the query string');
+  }
+  // Erreur si une clé est fournie mais ne correspond à aucune clé du tableau
+  const foundKey = knownKeys.find(k => k.key === req.query.key);
+  if(! foundKey) {
+    return res.status(401).send('The key you provided is not valid');
+  }
+  // Clé trouvée : continue l'exécution, next() passe au middleware suivant,
+  // ou dans le cas présent, au callback de traitement de la route
+  console.log('Authentified user with id:', foundKey.userId);
+  next();
+}
+
+// Utilise le middleware pour protéger TOUTES les routes
+app.use(checkKeyMiddleware);
 
 app.get('/api/movies', (req, res) => res.json(movies));
 
