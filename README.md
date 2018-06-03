@@ -8,6 +8,24 @@ Les terme de protocole, de client et serveur, peuvent trouver des parallèles da
 d'un café, on demande une boisson au *serveur*, on se conforme à un certain *protocole* : par exemple, on commence par dire "bonjour",
 et on conclut notre *requête* par "s'il vous plaît".
 
+Il existe de nombreux protocoles informatiques, et rien que ceux liés à Internet sont nombreux :
+* HTTP pour *Hyper Text Transfer Protocol* régit les échanges entre les navigateurs - mais pas que - et les serveurs web, pour transférer
+des fichiers d'"hypertexte" (texte avec des hyperliens, comme HTML)... Mais pas que (on peut aussi transférer des fichiers images, etc.) !
+* FTP pour *File Transfer Protocol* définit un protocole spécifique à l'échange de fichiers, en download (le client reçoit des fichiers d'un serveur)
+comme en upload (l'inverse donc).
+* SMTP pour *Simple Mail Transfer Protocol* : emails sortants (quand tu envoies un email).
+* POP3 pour *Post Office Protocol 3* : emails entrants (l'ancien protocole).
+* IMAP pour *Internet Message Access Protocol* : emails entrants également (protocole plus moderne).
+
+HTTP est aussi très utilisé pour de nombreuses applications en dehors des seuls navigateurs. Dans certaines entreprises où tout le réseau est strictement
+protégé, par des "pare-feus" et autres, le port 80 utilisé par HTTP est parfois le seul qui ne soit pas bloqué. Il peut donc être "détourné" pour d'autres
+usages que le web.
+
+FTP aussi est très utilisé, mais certains experts recommandent son abandon au profit de protocoles plus sécurisés comme HTTPS (HTTP crypté avec SSL).
+Allez, pour le plaisir de citer mon vieil ami Ben :
+
+![Obiwan FTP meme](https://i.pinimg.com/originals/d0/5d/2b/d05d2b0c435d8b890289a0d84d437cc8.jpg)
+
 ## Prépare tes munitions
 
 ![I need ammo](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/i-need-ammo.jpg)
