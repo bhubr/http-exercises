@@ -507,7 +507,7 @@ http.createServer(function (req, res) {
 
 ```
 
-**3ème sous-étape** : `git checkout etape07b-querystring-express`
+**3ème sous-étape** : `git checkout etape07b-querystring-express`, puis `npm install` (installer Express).
 
 Aaah, on va sortir l'artillerie lourde ! Node.js seul nous fournit `url.parse()` pour analyser une query string. Mais Express nous simplifie encore plus la tâche : par défaut, il parse à notre place la query string, et nous fournit le résultat dans `req.query`.
 
