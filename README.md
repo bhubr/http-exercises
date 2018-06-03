@@ -151,3 +151,52 @@ Rafraîchis encore la page, et... Surprise ! Le texte n'est plus "formaté" comm
 C'est le changement du header `Content-Type` qui a causé cela. Les headers de réponse donnent des informations au client, sur comment interpréter le corps de la réponse.
 Le `Content-Type` en particulier indique quel type de contenu le serveur envoie au client. Ici, on a bien envoyé une chaîne contenant du HTML, mais on a explicitement dit au client que cette chaîne est du texte simple (*plain text*).
 
+### Etape 3 : contenu XML
+
+Cette étape est à nouveau subdivisée en deux "sous-étapes". **Rien de très nouveau**, mais on va revoir la même chose avec du contenu XML.
+
+`git checkout etape03a-content-type-xml`
+
+Voici le code du serveur à cette étape :
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <to>Student</to>
+  <from>Trainer</from>
+  <heading>Reminder</heading>
+  <body>Be a good student and indent your code!!</body>
+</note>
+  `);
+}).listen(8080);
+```
+
+On a cette fois spécifié `text/xml` comme valeur de l'en-tête `Content-Type`, et mis du code XML dans le corps de la réponse. XML est un langage à balises, dans la même famille que HTML, mais plus extensible.
+
+![XML document](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/xml-document-content-type-xml.png)
+
+Les navigateurs comprennent le XML, et l'affichent sous forme d'un "arbre". Si un "noeud" de l'arborescence (ici `note`) contient d'autres noeuds, on peut le "replier" ou le déplier.
+
+Maintenant : `git checkout etape03b-content-type-text`, où à nouveau, on n'a changé que le header:
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <to>Student</to>
+  <from>Trainer</from>
+  <heading>Reminder</heading>
+  <body>Be a good student and indent your code!!</body>
+</note>
+  `);
+}).listen(8080);
+```
+
+Rafraîchis encore la page... Le XML n'est plus interprété en tant que tel, et donc le code est affiché tel quel, sans formatage.
