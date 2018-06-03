@@ -343,3 +343,41 @@ Là encore, on constate que chaque client a un comportement différent vis-à-vi
 * Firefox en tient compte mais ne génère pas d'erreur fatale en cas de décalage
 * Chrome te fait gentiment comprendre que t'es gentil, mais que si tu veux mettre un `Content-Length`, il faut lui mettre la bonne valeur.
 
+Maintenant, un exemple qui montre que la réponse peut arriver par petits bouts, et dans lequel il est utile d'indiquer la `Content-Length`.
+
+`git checkout etape06b-content-length`
+
+Voici le code serveur, dépouillé de ses commentaires. Si tu tiens à décortiquer le fonctionnement de ce programme, jette un coup d'oeil à `server.js`.
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  let writeInterval;
+  let lineIndex = 0;
+
+  const writeResponseLine = () => {
+    const paddedLineIndex = lineIndex.toString().padStart(4, '0');
+    res.write(`Line number is ${paddedLineIndex}\n`);
+    lineIndex++;
+    if(lineIndex === 100) {
+      clearInterval(writeInterval);
+      res.end('');
+    }
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/plain',
+    'Content-Length': '2000'
+  });
+  writeInterval = setInterval(writeResponseLine, 50)
+}).listen(8080);
+```
+
+En gros, ce que ça fait : après avoir écrit l'en-tête de réponse, on n'écrit pas la réponse d'un coup.
+
+Au lieu de cela, on démarre l'exécution périodique d'une fonction via `setInterval` :toutes les 50 millisecondes, on exécute `writeResponseLine` qui écrit exactement 20 octets dans le corps de la réponse.
+
+Après l'écriture de 100 lignes de 20 caractères, on stoppe l'exécution périodique de `writeResponseLine` en appelant `clearInterval`. On termine la réponse en utilisant `res.end('')`.
+
+Je t'invite à vérifier ce qui se passe dans telnet et l'un des navigateurs : on reçoit le contenu petit à petit. Comme la longueur du contenu reçu est égale à celle annoncée dans `Content-Length`, le chargement de la page s'arrête dès que le serveur termine l'écriture de sa réponse. C'est beau.
