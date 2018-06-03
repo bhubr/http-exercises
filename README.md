@@ -473,7 +473,7 @@ Elle prend au moins un paramètre : l'URL. Elle prend éventuellement un 2ème v
 
 Ce qui nous intéresse ici c'est le `pathname` (`/` la racine du serveur), et la `query`, elle-même un objet, contenant les couples clé-valeur passés via la query string.
 
-Et voici le code serveur (comme d'hab, commentaires plus complets dans `server.js`) :
+Et voici le code serveur : comme d'hab, commentaires plus complets dans `server.js`. Dans ce code, la partie utilisant `reduce()` sert à faire afficher, sur chaque ligne, une des paires *clé-valeur* de la query string.
 
 ```javascript
 const http = require('http');
@@ -506,3 +506,48 @@ http.createServer(function (req, res) {
 }).listen(8080);
 
 ```
+
+**3ème sous-étape** : `git checkout etape07b-querystring-express`
+
+Aaah, on va sortir l'artillerie lourde ! Node.js seul nous fournit `url.parse()` pour analyser une query string. Mais Express nous simplifie encore plus la tâche : par défaut, il parse à notre place la query string, et nous fournit le résultat dans `req.query`.
+
+Exemple qui fait strictement la même chose que le précédent, malgré de petites différences sur la façon d'écrire la réponse avec [res.set()](http://expressjs.com/en/4x/api.html#res.set), [res.status()](http://expressjs.com/en/4x/api.html#res.status) et [res.send()](http://expressjs.com/en/4x/api.html#res.send) :
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+    // Prépare un texte de base pour la réponse
+  const responseTextBase = `URL:
+  * Full URL: ${req.url}
+  * Query string parameters:\n`;
+
+  // Affiche req.query dans la console
+  console.log(req.query);
+
+  // Object.keys() pour récupérer les clés (ex: ['school', 'city', 'language'])
+  const queryStringKeys = Object.keys(req.query);
+
+  // reduce pour ajouter  - clé: valeur  au texte de base, pour chaque paramètre
+  const responseText = queryStringKeys.reduce((carry, key) => {
+    return carry + `    - ${key}: ${req.query[key]}\n`
+  }, responseTextBase);
+
+  // Petite différence, même si on peut utiliser res.writeHead(),
+  // Express fournit des méthodes séparées pour:
+  //   - positionner les headers: res.set()
+  //   - écrire le code de statut: res.status()
+  //   - écrire la réponse et l'envoyer: res.send()
+  // Remarque qu'ici, on chaîne les 3 appels.
+  res.set({
+    'Content-Type': 'text/plain',
+  })
+  .status(200)
+  .send(responseText);
+});
+
+app.listen(8080);
+```
+
+Toujours la même chose : teste différentes URL avec query string, avec telnet et/ou un navigateur...
