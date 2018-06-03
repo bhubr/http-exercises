@@ -551,3 +551,10 @@ app.listen(8080);
 ```
 
 Toujours la même chose : teste différentes URL avec query string, avec telnet et/ou un navigateur...
+
+Au passage, avec telnet, ou en examinant les headers dans les outils de développement, tu peux remarquer l'apparition de quelques nouveaux headers :
+* `X-Powered-By` ayant pour valeur `Express`. Ce n'est *pas* un header standard. Autant ceux vus jusqu'à présent, `Content-Type`, etc., sont normalisés dans la spécification du protocole HTTP, autant tous les headers préfixés par `X-` sont des headers "custom", ce qui permet à tout un chacun d'utiliser ses propres headers,
+en fonction de ses besoins.
+* `ETag` est une sorte d'empreinte digitale de la ressource. Si elle ne change pas d'une requête à l'autre, cela permet au navigateur de mettre en cache la ressource, pour éviter une requête complète au serveur pour la recharger. Plus d'infos [ici](https://fr.wikipedia.org/wiki/Balise-entit%C3%A9_ETag_HTTP) et d'autres plus complètes (et complexes !) [ici](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching?hl=fr).
+
+Tu peux aussi constater qu'Express, sans qu'on lui ait rien demandé, a aussi calculé la longueur du contenu et l'a indiquée dans `Content-Length`. Gentil Express !

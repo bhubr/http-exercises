@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-    // Prépare un texte de base pour la réponse
+  // Prépare un texte de base pour la réponse
   const responseTextBase = `URL:
   * Full URL: ${req.url}
   * Query string parameters:\n`;
