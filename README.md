@@ -105,3 +105,29 @@ Avec Firefox, on peut faire la même chose en cliquant "Raw headers" sur la lign
 
 **Conclusion** de cette étape : le serveur envoie autre chose que simplement "Hello World". Le code de statut et les en-têtes donnent des informations supplémentaires au client.
 Mais pour quoi faire ? Cela va devenir plus clair avec l'exemple suivant...
+
+### Etape 2 : contenu HTML
+
+Cette étape est subdivisée en deux "sous-étapes".
+
+`git checkout etape02a-content-type-html`
+
+Voici le code du serveur à cette étape :
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.end('<h1>Hello World</h1>');
+}).listen(8080);
+```
+
+Par rapport à l'étape précédente, deux choses ont changé :
+* on a spécifié `text/html` comme valeur de l'en-tête `Content-Type`.
+* on a entouré le `Hello World` de balises `<h1>...</h1>`.
+
+Tu n'as pas besoin de redémarrer le serveur, il se redémarre tout seul grâce à nodemon !
+
+À nouveau, lance `telnet localhost 8080`, puis après les quelques lignes qu'il affiche, saisis `GET /` et valide deux fois. Tu dois voir s'afficher un radieux "Hello World" en gros titre :
+
+![Hello World](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/hello-world-html.png)
