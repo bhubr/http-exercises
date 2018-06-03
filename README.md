@@ -113,6 +113,7 @@ Cette étape est subdivisée en deux "sous-étapes".
 `git checkout etape02a-content-type-html`
 
 Voici le code du serveur à cette étape :
+
 ```javascript
 const http = require('http');
 
@@ -128,6 +129,25 @@ Par rapport à l'étape précédente, deux choses ont changé :
 
 Tu n'as pas besoin de redémarrer le serveur, il se redémarre tout seul grâce à nodemon !
 
-À nouveau, lance `telnet localhost 8080`, puis après les quelques lignes qu'il affiche, saisis `GET /` et valide deux fois. Tu dois voir s'afficher un radieux "Hello World" en gros titre :
+Rafraîchis la page sur ton navigateur. Tu dois voir s'afficher un radieux "Hello World" en gros titre :
 
-![Hello World](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/hello-world-html.png)
+![Hello World html](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/hello-world-html.png)
+
+Maintenant : `git checkout etape02b-content-type-text`, où le code du serveur est :
+
+```javascript
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('<h1>Hello World</h1>');
+}).listen(8080);
+```
+
+Rafraîchis encore la page, et... Surprise ! Le texte n'est plus "formaté" comme du HTML, mais affiché "brut", tel qu'envoyé par le serveur.
+
+![Hello World plain text](https://raw.githubusercontent.com/bhubr/http-exercises/master/img/hello-world-plain-text.png)
+
+C'est le changement du header `Content-Type` qui a causé cela. Les headers de réponse donnent des informations au client, sur comment interpréter le corps de la réponse.
+Le `Content-Type` en particulier indique quel type de contenu le serveur envoie au client. Ici, on a bien envoyé une chaîne contenant du HTML, mais on a explicitement dit au client que cette chaîne est du texte simple (*plain text*).
+
