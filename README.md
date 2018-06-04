@@ -1196,3 +1196,47 @@ occurences de cette `boundary`.
 * Ici, Chrome ne montre pas le *contenu* des fichiers qui sont uploadés. Mais le `Content-Length: 1823` nous indique bien que des données sont envoyées, qu'on voit pas dans "Request Payload".
 
 Tu seras amené à faire tes soumissions de formulaires quasi-systématiquement en AJAX (c'est à dire sans recharger la page, du fait du contexte "Single Page App" des applis React, Angular, etc.). Si tu as besoin de docs sur comment faire ça, reporte toi à la section de [MDN sur FormData](https://developer.mozilla.org/fr/docs/Web/API/FormData/Utilisation_objets_FormData#Envoi_de_fichiers_via_un_objet_FormData). Comme cette section utilise `XMLHttpRequest` (l'ancienne API Ajax des navigateurs), reporte-toi aussi à des exemples plus actuels, comme par exemple [ce post StackOverflow](https://stackoverflow.com/questions/35192841/fetch-post-with-multipart-form-data/35206069) et [cet article de blog](https://stanko.github.io/uploading-files-using-fetch-multipart-form-data/). Sinon, une recherche sur les termes "multipart upload fetch" devrait t'amener des réponses.
+
+### Etape 16 : soumission de formulaires en POST / application/json
+
+`git checkout etape16-post-submission-json`
+
+On en arrive à un dernier type d'encodage, du moins en ce qui nous concerne : le JSON. Je précise plusieurs points :
+* Les deux encodages qu'on a vus précédemment sont les encodages "standard" des formulaires web.
+* On ne peut pas spécifier `enctype="application/json" sur un tag `<form>`. Un [document de travail](https://www.w3.org/TR/html-json-forms/)
+  existe encore sur le site du W3C, mais cette spécification est **abandonnée**.
+* On peut cependant envoyer du JSON via des requêtes AJAX, que ce soit via `XMLHttpRequest` (l'ancêtre vénérable), `jQuery.ajax` (tout aussi vénérable
+mais tout aussi ancestral), ou, mieux : `fetch`, l'API moderne pour les requêtes AJAX.
+* Il existe encore d'autres types d'encodage : on peut envoyer des données en XML, et que sais-je encore.
+* Mais pour les apps JavaScript, il est plus naturel de travailler avec du JSON (qui signifie, rappelons-le, *JavaScript Object Notation*, signifiant sa parenté avec la façon d'écrire les objets en JS).
+
+Tu peux tester ce formulaire avec Chrome ou autre, voir ce qui se passe si tu essaies d'insérer deux users avec le même email.
+
+De même tu peux tester avec telnet. Seulement, il te faudra *encoder* toi-même les caractéristiques du nouvel utilisateur à enregistrer,
+vers le format JSON. Tu peux écrire un objet JS avec les bonnes propriétés (email, name, password) dans un fichier .js que tu exécuteras avec Node, ou directement l'écrire dans la console du navigateur, et faire un `console.log(JSON.stringify(obj))`pour l'encoder en JSON. Exemple :
+
+```javascript
+const userData = {
+  name: 'John Doe',
+  email: 'johndoe01@example.com',
+  password: 'SoSecure1234'
+};
+console.log(JSON.stringify(userData));
+// {"name":"John Doe","email":"johndoe01@example.com","password":"SoSecure1234"}
+```
+
+Ensuite, colle le résultat (la chaîne JSON) dans ton éditeur de texte, sélectionne tout : ton éditeur doit te dire combien de caractères tu as sélectionné.
+Cela te donne ta `Content-Length` (77 dans mon cas). Ensuite, dans telnet, écris ta requête. Dans mon exemple :
+
+POST /signup
+Content-Type: application/json
+Content-Length: 77
+
+{"name":"John Doe","email":"johndoe01@example.com","password":"SoSecure1234"}
+
+Si tu le fais une première fois, tu reçois en retour les caractéristiques du nouvel user (avec son id fictif, et sans le password).
+Si tu colles la même chose une 2ème fois, tu reçois une erreur `400 Bad Request`.
+
+Voilà... Avec tout ça, tu pourras bientôt rajouter HTTP aux langues vivantes que tu maîtrises !
+
+[To be continued...]
