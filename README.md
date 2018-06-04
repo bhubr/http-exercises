@@ -1145,3 +1145,52 @@ Puis ré-essaie une soumission via le navigateur ou via Telnet. Le résultat est
 
 Ce `undefined` dont on a essayé de lire la propriété `email`, c'est la valeur du `req.body` : dans Express, pas de body parser, pas de body !
 Remets donc les choses en ordre, dès maintenant, en décommentant la ligne qui active le body parser.
+
+### Etape 15 : soumission de formulaires en POST / multipart/form-data
+
+`git checkout etape15-post-submission-multipart`
+
+Cet exemple va te montrer un deuxième type d'encodage des données POST : le **multipart** (mes plus plates excuses pour mon humour débile).
+
+![Leeloo Dallas Multipart](https://imgflip.com/i/2bk855)
+
+On recycle l'exemple précédent, avec quelques modifications pour le transformer en formulaire d'upload :
+* ajout de l'attribut `enctype="multipart/form-data"` au `<form>`, et modification de son `action` pour soumettre vers `/upload`.
+* suppression du champ password, ajout de deux champs `<input type="file" />` pour faire des uploads de fichier.
+
+Par contre, on ne va pas vraiment gérer le fichier uploadé.
+Il y a plein de tutos pour ça, s'appuyant sur des modules tels que `multer`, `formidable`, etc. ([un comparatif de modules toujours maintenus](https://npmcompare.com/compare/busboy,formidable,multer,multiparty), ça vaut ce que ça vaut).
+
+Alors ici, tu vas regarder ce qui se passe, uniquement dans Chrome. Telnet ne te sera d'aucune utilité, dans ce cas précis.
+
+Pour remplir le formulaire, sélectionne deux fichiers (par exemple `package.json` et `server.js` dans ce repo), puis envoie le formulaire. Bien sûr, tu es sur l'onglet Network de tes outils de dev... Si tu sélectionnes l'unique ligne du trafic réseau, l'onglet "Headers" doit te montrer, sous "Request Headers", un `Content-Type` du
+genre : `Content-Type:multipart/form-data; boundary=----WebKitFormBoundary9GjZ24NeoBIniOZI`.
+
+Et sous "Request Payload", tu dois voir quelque chose de semblable à ceci :
+
+    ------WebKitFormBoundary9GjZ24NeoBIniOZI
+    Content-Disposition: form-data; name="email"
+
+    jonsnow@got.tv
+    ------WebKitFormBoundary9GjZ24NeoBIniOZI
+    Content-Disposition: form-data; name="file1"; filename="package.json"
+    Content-Type: application/json
+
+
+    ------WebKitFormBoundary9GjZ24NeoBIniOZI
+    Content-Disposition: form-data; name="file2"; filename="server.js"
+    Content-Type: application/javascript
+
+
+    ------WebKitFormBoundary9GjZ24NeoBIniOZI--
+
+Bon, pour faire rapide et (j'espère) simple :
+* `boundary=XXX` dans le header `Content-Type` indique un "séparateur", qui est utilisé pour séparer les *différentes parties* (multipart, quoi). `Boundary` signifie "frontière", by the way.
+* Cette valeur `XXX` donnée à `boundary` est effectivement utilisée dans le corps de la requête. Chaque champ du formulaire se trouve entre deux
+occurences de cette `boundary`.
+* On retrouve les attributs `name` donnés à chaque champ du formulaire (`email`, `file1`, `file2`).
+* Pour les fichiers, leurs noms sont également indiqués, ainsi que leurs types MIME (`Content-Type`, là encore).
+* En fait, c'est un peu comme si on envoyait plusieurs formulaires dans un seul corps de requête, chacun avec ses propres en-têtes.
+* Ici, Chrome ne montre pas le *contenu* des fichiers qui sont uploadés. Mais le `Content-Length: 1823` nous indique bien que des données sont envoyées, qu'on voit pas dans "Request Payload".
+
+Tu seras amené à faire tes soumissions de formulaires quasi-systématiquement en AJAX (c'est à dire sans recharger la page, du fait du contexte "Single Page App" des applis React, Angular, etc.). Si tu as besoin de docs sur comment faire ça, reporte toi à la section de [MDN sur FormData](https://developer.mozilla.org/fr/docs/Web/API/FormData/Utilisation_objets_FormData#Envoi_de_fichiers_via_un_objet_FormData). Comme cette section utilise `XMLHttpRequest` (l'ancienne API Ajax des navigateurs), reporte-toi aussi à des exemples plus actuels, comme par exemple [ce post StackOverflow](https://stackoverflow.com/questions/35192841/fetch-post-with-multipart-form-data/35206069) et [cet article de blog](https://stanko.github.io/uploading-files-using-fetch-multipart-form-data/). Sinon, une recherche sur les termes "multipart upload fetch" devrait t'amener des réponses.
