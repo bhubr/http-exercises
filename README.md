@@ -1062,11 +1062,45 @@ Donc, si on n'envoie pas les données de formulaire par la méthode GET, ce sera
 
 **Attention** : `git checkout etape14-post-submission-urlencoded` **puis** `npm install` (pour installer le module `body-parser`)
 
-On peut reprendre l'exemple précédent, et y apporter quelques modifications, pour nettement améliorer la situation :
+On peut reprendre l'exemple précédent, et y apporter quelques modifications, pour nettement améliorer la situation (voir `server.js`) :
 * Ajout de l'attribut `method="POST"` sur le `<form>`.
 * En conséquence, sur la route `/login`, passage de `app.get('/login', ...)` à `app.post('/login', ...)`.
 * Ajout d'un middleware permettant de parser / analyser le *corps* d'une requête envoyée en POST (*request body*) : le "body parser",
 fourni par le module `body-parser`.
+
+```javascript
+const express = require('express');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const app = express();
+
+app.use(morgan('common'));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.get('/', (req, res) => {
+  // Formulaire de login, envoyé par méthode POST vers le path /login
+  const loginForm = `<form action="/login" method="POST">
+      <h1>Login</h1>
+      <p>Hint: use email <strong>jonsnow@got.tv</strong> and pass <strong>YouKnowNothing</strong></p>.
+      <input name="email" type="email" placeholder="Your email" />
+      <input name="password" type="text" placeholder="Your password" />
+      <input type="submit" value="Send" />
+    </form>`
+  res.send(loginForm);
+});
+
+// la route qui traite la requête de login
+app.post('/login', (req, res) => {
+  // on n'autorise le login que pour un user "fake"
+  // ayant pour email jonsnow@got.tv et password YouKnowNothing
+  if(req.body.email !== 'jonsnow@got.tv' || req.body.password !== 'YouKnowNothing') {
+    return res.status(401).send('Bad credentials');
+  }
+  res.json({ id: 1, email: 'jonsnow@got.tv' });
+});
+
+app.listen(8080);
+```
 
 Teste tout cela, avec Chrome d'abord : outils de dev, onglet "Network"... Soumets le formulaire avec ce qui t'est donné
 en indice (subtil, ça va de soi), sélectionne la ligne correspondante (la seule !) dans la liste des requêtes... Et examine les headers (onglet du même nom) :
@@ -1076,7 +1110,7 @@ le `Content-Type` peut être communiqué du client vers le serveur, tout comme, 
 
 Mais, mais... Ce corps de réponse ressemble à... Une query string ! En effet, c'est la façon dont sont encodées par défaut les données de formulaires, lorsqu'on soumet en POST. D'où, d'ailleurs, le header de requête `Content-Type: application/x-www-form-urlencoded`, qui nous indique bien qu'on envoie des données "urlencoded".
 
-Tiens, fais la même chose avec Telnet. Une fois `telnet localhost 8080`  lancé, attention, il y a une petite différence par rapport aux requêtes GET. Tu vas saisir (copier-coller est autorisé, mais j'aurais pas du dire ça) :
+Maintenant, fais la même chose avec Telnet. Une fois `telnet localhost 8080`  lancé, attention, il y a une petite différence par rapport aux requêtes GET. Tu vas saisir (copier-coller est autorisé, mais j'aurais pas du dire ça) :
 
     POST /login
     Content-Type: application/x-www-form-urlencoded
@@ -1084,3 +1118,30 @@ Tiens, fais la même chose avec Telnet. Une fois `telnet localhost 8080`  lancé
 
     email=jonsnow%40got.tv&password=YouKnowNothing
 
+Tu peux conclure et valider ta saisie d'*un* appui sur Entrée. Si on se penche sur "l'anatomie" de cette requête, il n'y a pas tant de différences que ça, avec ce qu'on a déjà vu :
+* On indique toujours la *méthode* suivie du *chemin* : `POST /login`
+* On indique cette fois des headers de requête. Au passage, *ce n'est pas du tout spécifique à POST*, et on peut aussi passer des headers de requête en GET, PUT, DELETE, etc.
+* Par contre, après avoir laissé une ligne vide, on écrit le corps de la requête ou *request body*, qui par définition n'existe pas pour une requête GET.
+* On a mis très exactement 46 caractères dans ce *body*, ce qui est *très grossièrement* équivalent à 46 octets (en fait, ça l'est tant qu'on reste dans les caractères très courants, non accentués, référencés dans la table ASCII de base).
+
+Tiens, comme on est joueurs, dans `server.js`, commente la ligne suivante :
+
+    app.use(bodyParser.urlencoded({ extended: false }));
+
+Puis ré-essaie une soumission via le navigateur ou via Telnet. Le résultat est sans appel : tu écopes d'une erreur `500 Internal Server Error`, typique d'un cas où une erreur non prévue se produit. La réponse en erreur renvoyée par le serveur, contient la même chose que ce qui s'affiche dans la console :
+
+    TypeError: Cannot read property 'email' of undefined
+        at app.post (/home/bhu/Dev/http-exercises/server.js:25:15)
+        at Layer.handle [as handle_request] (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/layer.js:95:5)
+        at next (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/route.js:137:13)
+        at Route.dispatch (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/route.js:112:3)
+        at Layer.handle [as handle_request] (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/layer.js:95:5)
+        at /home/bhu/Dev/http-exercises/node_modules/express/lib/router/index.js:281:22
+        at Function.process_params (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/index.js:335:12)
+        at next (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/index.js:275:10)
+        at logger (/home/bhu/Dev/http-exercises/node_modules/morgan/index.js:144:5)
+        at Layer.handle [as handle_request] (/home/bhu/Dev/http-exercises/node_modules/express/lib/router/layer.js:95:5)
+    ::1 - - [04/Jun/2018:02:10:33 +0000] "POST /login HTTP/0.9" 500 1287
+
+Ce `undefined` dont on a essayé de lire la propriété `email`, c'est la valeur du `req.body` : dans Express, pas de body parser, pas de body !
+Remets donc les choses en ordre, dès maintenant, en décommentant la ligne qui active le body parser.
