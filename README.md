@@ -833,7 +833,7 @@ Petite remarque : on valide les requêtes POST aussi par un "double entrée", *d
 
 Nous arrivons à un sujet ô combien important dans les sites et applications web : l'envoi de données de formulaires.
 
-On repart cette fois d'un nouvel exemple : `git checkout etape11a-formulaire-get`
+On repart cette fois d'un nouvel exemple : `git checkout etape11-formulaire-get`
 
 Voilà le code du serveur :
 
@@ -898,7 +898,7 @@ Si tu veux faire tes propres requêtes (ce que je te conseille), reporte-toi à 
 
 **La soumission de formulaires en GET**, telle que ci-dessus, est quelque peu tombée en désuétude. Les paramètres GET sont toujours largement utilisés (ex. des vidéos YouTube vu précédemment), mais on ne les communique généralement pas via des formulaires. Ou alors, pour des usages bien spécifiques, comme va le montrer l'exemple suivant.
 
-#### Utilisation de requêtes GET pour filtrer le retour d'une API
+### Etape 12 : paramètres de requête pour filtrer le retour d'une API
 
 `git checkout etape11b-filter-api-results`
 
@@ -977,3 +977,84 @@ On pourrait même avoir plusieurs filtres... Cela dépasse un peu le sujet, mais
 
 Ils sont appelés comme cela probablement par abus de langage, du fait que c'est la façon dont on passe les données au serveur
 lors d'une soumission de formulaire en GET.
+
+Dernier point : cet exemple n'est pas à proprement parler une soumission de formulaire... puisqu'on n'a pas de bouton "submit",
+et qu'on fait les envois de données en AJAX, c'est-à-dire sans recharger toute la page comme on le faisait dans l'exemple précédent.
+
+### Etape 13 : problèmes liés à la soumission par GET
+
+**Attention** : `git checkout etape13a-bad-case-of-get-submission` **puis** `npm install` (pour installer le module `morgan`)
+
+Si la façon d'envoyer des paramètres par GET vue dans l'étape 12 est communément utilisée, l'envoi de formulaires comme dans l'étape 11 ne l'est
+pas tant que ça. Il y a des raisons à cela : la méthode GET n'est pas très bien adaptée.
+
+On reprend un exemple assez semblable à celui de l'exemple 11, transformé pour afficher un formulaire de login.
+
+```javascript
+const express = require('express');
+const morgan = require('morgan');
+const app = express();
+
+app.use(morgan('common'));
+
+app.get('/', (req, res) => {
+  // Un formulaire à afficher. On n'indique pas d'attribut method dans la balise <form>,
+  // c'est donc GET qui est utilisé par défaut.
+  // Par contre, cette fois on a spécifié l'URL vers laquelle envoyer
+  // le formulaire, via l'attribut action
+  const loginForm = `<form action="/login">
+      <h1>Login</h1>
+      <p>Hint: use email <strong>jonsnow@got.tv</strong> and pass <strong>YouKnowNothing</strong></p>.
+      <input name="email" type="email" placeholder="Your email" />
+      <input name="password" type="text" placeholder="Your password" />
+      <input type="submit" value="Send" />
+    </form>`
+  res.send(loginForm);
+});
+
+// la route qui traite la requête de login
+app.get('/login', (req, res) => {
+  // on n'autorise le login que pour un user "fake"
+  // ayant pour email jonsnow@got.tv et password YouKnowNothing
+  if(req.query.email !== 'jonsnow@got.tv' || req.query.password !== 'YouKnowNothing') {
+    return res.status(401).send('Bad credentials');
+  }
+  res.json({ id: 1, email: 'jonsnow@got.tv' });
+});
+
+app.listen(8080);
+```
+
+On a cette fois un formulaire de login, qui envoie ses données en GET. Comme il est d'usage dans les applications serveur,
+on utilise le module `morgan` pour "logger" toutes les requêtes entrantes sur la console : pour chaque requête, les infos
+suivantes sont affichées (jette un oeil à ta console, après avoir joué un peu avec l'exemple dans le navigateur) :
+* Adresse IP d'origine (`::1` est l'adresse IP locale en IPv6).
+* Date&heure de la requête.
+* Chemin de la requête, *incluant la query string*, et donc, dans l'exemple ci-dessus, le password !
+* Version du protocole (HTTP/1.1).
+* Code de statut (200, 401, etc.)
+* Nombre d'octets envoyés (qui correspond au header de réponse `Content-Length`).
+
+Dans une application Node.js en production, on a des systèmes tels que [PM2](http://pm2.keymetrics.io/) pour gérer le processus
+Node.js, le redémarrer s'il crashe, etc. Ces systèmes sont configurés pour sauvegarder *toute* la sortie console dans un ou des fichiers
+appelés journaux ou *logs*.
+
+Tu vois le problème ? Eh bien, avec l'exemple ci-dessus, on se retrouverait à écrire *en clair* le mot de passe des utilisateurs
+dans le log. Et ça... ça, jeune padawan, c'est mal, c'est même passible d'une punition sévère !
+
+![Your Punishment Must Be More Severe](http://i.qkme.me/3p23fz.jpg)
+
+En effet, si quelqu'un de mal intentionné arrive à s'introduire sur ton serveur, il lui suffit de lire les logs pour récupérer les mots
+de passe de tes chers clients ! Tout le mal que tu as pu te donner à crypter les mots de passe dans ta BDD, en vain !
+
+Donc, répète après moi : "je n'enverrai pas de données sensibles par GET". Voilà !
+
+Outre les problèmes de sécurité, les envois en GET sont aussi :
+* limités par la taille de ce qu'on peut envoyer
+* limités par le *type de données* qu'on peut envoyer (pour envoyer une image, il faudrait d'abord l'encoder, depuis son format binaire,
+vers un format "string-friendly").
+
+Donc, si on n'envoie pas les données de formulaire par la méthode GET, ce sera... par la POST !
+
+![La Poste](http://www.frederic-poitou.com/blog/wp-content/88059_poste01-jdr01.jpg).
+
