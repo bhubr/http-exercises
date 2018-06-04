@@ -897,3 +897,83 @@ Essaie maintenant de soumettre ce formulaire, non pas via le navigateur, mais vi
 Si tu veux faire tes propres requêtes (ce que je te conseille), reporte-toi à un outil d'encodage en ligne, ou utilise [encodeURIComponent](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/encodeURIComponent) dans la console de ton navigateur, pour l'encodage de chaînes comportant des caractères spéciaux:
 
 **La soumission de formulaires en GET**, telle que ci-dessus, est quelque peu tombée en désuétude. Les paramètres GET sont toujours largement utilisés (ex. des vidéos YouTube vu précédemment), mais on ne les communique généralement pas via des formulaires. Ou alors, pour des usages bien spécifiques, comme va le montrer l'exemple suivant.
+
+#### Utilisation de requêtes GET pour filtrer le retour d'une API
+
+`git checkout etape11b-filter-api-results`
+
+Voici le code serveur... Qui inclut un peu de code front !
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Encore les movies !
+const movies = [
+  { id: 1, slug: 'the-last-jedi', title: 'The Last Jedi', content: 'Seriously... It really sucks!!!' },
+  { id: 2, slug: 'the-grand-budapest-hotel', title: 'The Grand Budapest Hotel', content: 'This, on the other hand, is good.' },
+  { id: 3, slug: 'the-matrix', title: 'The Matrix', content: 'A timeless classic.' },
+  { id: 4, slug: 'wall-e', title: 'Wall-E', content: 'Great one.' },
+  { id: 5, slug: 'the-last-of-the-mohicans', title: 'The Last of the Mohicans', content: "Call me an incult, I haven't seen this one." }
+];
+
+app.get('/api/movies', (req, res) => {
+  // Alors... c'est pas si compliqué: on convertit à la fois le paramètre passé dans la query string (req.query.titlePart),
+  // et le titre de chaque film, en minuscules, pour ne pas éliminer des titres dont la casse (majuscules&minuscules)
+  // ne correspond pas. On garde les films dont les titres contiennent le terme de recherche passé dans req.query.titlePart
+  const filteredMovies = movies.filter(
+    m => m.title.toLowerCase().includes(req.query.titlePart.toLowerCase())
+  );
+  res.json(filteredMovies);
+});
+
+app.get('/', (req, res) => {
+  let responseText = `
+    <form>
+      <h1>Movies</h1>
+      <p>Filter by movie title</p>
+      <input id="titlePart" name="titlePart" type="text" placeholder="Type a few characters" />
+      <ul id="results"></ul>
+    </form>
+    <script>
+    // réagit aux appuis sur une touche, dans le champ input
+    document.getElementById('titlePart').addEventListener('keyup', evt => {
+      const titlePart = evt.target.value;
+      fetch('/api/movies?titlePart=' + titlePart)
+      .then(r => r.json())
+      .then(movies => {
+        // affiche les films filtrés
+        document.getElementById('results').innerHTML = '<h3>Results</h3>' + movies.map(
+          movie => \`<li>\${movie.title}</li>\`
+        ).join('');
+      });
+    });
+    </script>
+    `
+  res.send(responseText);
+});
+
+app.listen(8080);
+```
+
+Tu peux décortiquer ce code, mais ce n'est pas obligatoire... Ce qu'il fait :
+* Affichage d'un formulaire... sans bouton submit
+* Dans le html qu'on envoie au client, on inclut un script, avec un "event listener" sur le champ input
+* Cet event listener détecte les changements de l'input, et envoie une requête GET sur la route `/api/movies`,
+avec un paramètre de requête (clé : `titlePart`, valeur : celle de l'input)
+* Le callback de la route `/api/movies` filtre le tableau de movies, en ne gardant que ceux dont le titre contient
+le terme passé dans le paramètre `titlePart`.
+* Les movies filtrés sont envoyés au client, qui les affiche sous forme de list items.
+
+Sois curieux : regarde ce qui se passe dans l'onglet "Network" des outils de développeur, au fur et à mesure qu'on modifie
+le champ input... Une requête est émise à chaque changement.
+
+C'est une version simplifiée de ce qui se ferait "en vrai" : dans une vraie app, on irait chercher les data dans la BDD
+au lieu de les prendre dans un tableau, et on filtrerait via un `WHERE` dans la query SQL, au lieu de faire un `filter()`.
+
+On pourrait même avoir plusieurs filtres... Cela dépasse un peu le sujet, mais c'est un usage courant des paramètres GET.
+À propos, bien qu'on puisse les appeler "paramètres GET", les paramètres passés dans la query string ne sont pas réservés
+à la méthode GET. On peut les utiliser pour n'importe quelle méthode.
+
+Ils sont appelés comme cela probablement par abus de langage, du fait que c'est la façon dont on passe les données au serveur
+lors d'une soumission de formulaire en GET.
