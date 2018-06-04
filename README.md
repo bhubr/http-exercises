@@ -1067,6 +1067,8 @@ On peut reprendre l'exemple précédent, et y apporter quelques modifications, p
 * En conséquence, sur la route `/login`, passage de `app.get('/login', ...)` à `app.post('/login', ...)`.
 * Ajout d'un middleware permettant de parser / analyser le *corps* d'une requête envoyée en POST (*request body*) : le "body parser",
 fourni par le module `body-parser`.
+* Récupération des données du formulaire, non plus via les propriétés de `req.query`, mais via celles de `req.body`, un objet qui a été
+construit par le body parser, à partir du *corps de requête* envoyé par le client.
 
 ```javascript
 const express = require('express');
