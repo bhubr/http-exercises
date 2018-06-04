@@ -34,7 +34,7 @@ On va s'exercer à faire des requêtes sur un mini-serveur écrit avec Node.js. 
 * Node.js. Si tu ne l'as pas, tu peux l'installer sous Ubuntu / Debian en suivant [ces instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
 * nodemon - un package pour Node.js, permettant de "surveiller" le fichier répertoire contenant le code source du serveur, pour le redémarrer
 à chaque changement : `sudo npm install -g nodemon`
-* Mozilla Firefox - qui pour ces exercices, présente un avantage par rapport à Chrome, pour visualiser le résultat de certaines requêtes
+* Mozilla Firefox *et* Google Chrome, chacun pouvant avoir l'avantage sur certaines fonctionnalités précises dont on va se servir
 * curl, outil de requêtes spécifique au protocole HTTP, pour émettre des requêtes depuis le terminal. Installe-le avec `sudo apt-get install curl`
 * telnet, outil de requêtes, indépendant de tout protocole, pour voir de plus près les coulisses... Installe-le avec `sudo apt-get install telnet`
 
@@ -983,7 +983,7 @@ et qu'on fait les envois de données en AJAX, c'est-à-dire sans recharger toute
 
 ### Etape 13 : problèmes liés à la soumission par GET
 
-**Attention** : `git checkout etape13a-bad-case-of-get-submission` **puis** `npm install` (pour installer le module `morgan`)
+**Attention** : `git checkout etape13-bad-case-of-get-submission` **puis** `npm install` (pour installer le module `morgan`)
 
 Si la façon d'envoyer des paramètres par GET vue dans l'étape 12 est communément utilisée, l'envoi de formulaires comme dans l'étape 11 ne l'est
 pas tant que ça. Il y a des raisons à cela : la méthode GET n'est pas très bien adaptée.
@@ -1047,7 +1047,7 @@ dans le log. Et ça... ça, jeune padawan, c'est mal, c'est même passible d'une
 En effet, si quelqu'un de mal intentionné arrive à s'introduire sur ton serveur, il lui suffit de lire les logs pour récupérer les mots
 de passe de tes chers clients ! Tout le mal que tu as pu te donner à crypter les mots de passe dans ta BDD, en vain !
 
-Donc, répète après moi : "je n'enverrai pas de données sensibles par GET". Voilà !
+Donc, répète après moi : **"je n'enverrai pas de données sensibles par GET"**. Voilà !
 
 Outre les problèmes de sécurité, les envois en GET sont aussi :
 * limités par la taille de ce qu'on peut envoyer
@@ -1057,4 +1057,30 @@ vers un format "string-friendly").
 Donc, si on n'envoie pas les données de formulaire par la méthode GET, ce sera... par la POST !
 
 ![La Poste](http://www.frederic-poitou.com/blog/wp-content/88059_poste01-jdr01.jpg).
+
+### Etape 14 : soumission de formulaires en POST / urlencoded
+
+**Attention** : `git checkout etape14-post-submission-urlencoded` **puis** `npm install` (pour installer le module `body-parser`)
+
+On peut reprendre l'exemple précédent, et y apporter quelques modifications, pour nettement améliorer la situation :
+* Ajout de l'attribut `method="POST"` sur le `<form>`.
+* En conséquence, sur la route `/login`, passage de `app.get('/login', ...)` à `app.post('/login', ...)`.
+* Ajout d'un middleware permettant de parser / analyser le *corps* d'une requête envoyée en POST (*request body*) : le "body parser",
+fourni par le module `body-parser`.
+
+Teste tout cela, avec Chrome d'abord : outils de dev, onglet "Network"... Soumets le formulaire avec ce qui t'est donné
+en indice (subtil, ça va de soi), sélectionne la ligne correspondante (la seule !) dans la liste des requêtes... Et examine les headers (onglet du même nom) :
+* Dans "Request Headers", le header `Content-Type` a la valeur `application/x-www-form-urlencoded`. Oui, on peut spécifier des en-têtes de requête, et oui,
+le `Content-Type` peut être communiqué du client vers le serveur, tout comme, on l'a vu, il peut l'être dans le sens inverse.
+* Dans "Form Data", tu voix apparaître par défaut les données que tu as saisies, "parsées", séparées en couples clé-valeur. Clique sur "view source" pour voir ce que le client a *réellement* envoyé dans le corps de la requête : tu dois voir `email=jonsnow%40got.tv&password=YouKnowNothing`.
+
+Mais, mais... Ce corps de réponse ressemble à... Une query string ! En effet, c'est la façon dont sont encodées par défaut les données de formulaires, lorsqu'on soumet en POST. D'où, d'ailleurs, le header de requête `Content-Type: application/x-www-form-urlencoded`, qui nous indique bien qu'on envoie des données "urlencoded".
+
+Tiens, fais la même chose avec Telnet. Une fois `telnet localhost 8080`  lancé, attention, il y a une petite différence par rapport aux requêtes GET. Tu vas saisir (copier-coller est autorisé, mais j'aurais pas du dire ça) :
+
+    POST /login
+    Content-Type: application/x-www-form-urlencoded
+    Content-Length: 46
+
+    email=jonsnow%40got.tv&password=YouKnowNothing
 
