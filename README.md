@@ -1152,7 +1152,7 @@ Remets donc les choses en ordre, dès maintenant, en décommentant la ligne qui 
 
 Cet exemple va te montrer un deuxième type d'encodage des données POST : le **multipart** (mes plus plates excuses pour mon humour débile).
 
-![Leeloo Dallas Multipart](https://imgflip.com/i/2bk855)
+![Leeloo Dallas Multipart](https://i.imgflip.com/2bk855.jpg)
 
 On recycle l'exemple précédent, avec quelques modifications pour le transformer en formulaire d'upload :
 * ajout de l'attribut `enctype="multipart/form-data"` au `<form>`, et modification de son `action` pour soumettre vers `/upload`.
