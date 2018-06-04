@@ -1203,7 +1203,7 @@ Tu seras amené à faire tes soumissions de formulaires quasi-systématiquement 
 
 On en arrive à un dernier type d'encodage, du moins en ce qui nous concerne : le JSON. Je précise plusieurs points :
 * Les deux encodages qu'on a vus précédemment sont les encodages "standard" des formulaires web.
-* On ne peut pas spécifier `enctype="application/json" sur un tag `<form>`. Un [document de travail](https://www.w3.org/TR/html-json-forms/)
+* On ne peut pas spécifier `enctype="application/json"` sur un tag `<form>`. Un [document de travail](https://www.w3.org/TR/html-json-forms/)
   existe encore sur le site du W3C, mais cette spécification est **abandonnée**.
 * On peut cependant envoyer du JSON via des requêtes AJAX, que ce soit via `XMLHttpRequest` (l'ancêtre vénérable), `jQuery.ajax` (tout aussi vénérable
 mais tout aussi ancestral), ou, mieux : `fetch`, l'API moderne pour les requêtes AJAX.
