@@ -1226,13 +1226,13 @@ console.log(JSON.stringify(userData));
 ```
 
 Ensuite, colle le résultat (la chaîne JSON) dans ton éditeur de texte, sélectionne tout : ton éditeur doit te dire combien de caractères tu as sélectionné.
-Cela te donne ta `Content-Length` (77 dans mon cas). Ensuite, dans telnet, écris ta requête. Dans mon exemple :
+    Cela te donne ta `Content-Length` (77 dans mon cas). Ensuite, dans telnet, écris ta requête. Dans mon exemple :
 
-POST /signup
-Content-Type: application/json
-Content-Length: 77
+    POST /signup
+    Content-Type: application/json
+    Content-Length: 77
 
-{"name":"John Doe","email":"johndoe01@example.com","password":"SoSecure1234"}
+    {"name":"John Doe","email":"johndoe01@example.com","password":"SoSecure1234"}
 
 Si tu le fais une première fois, tu reçois en retour les caractéristiques du nouvel user (avec son id fictif, et sans le password).
 Si tu colles la même chose une 2ème fois, tu reçois une erreur `400 Bad Request`.
